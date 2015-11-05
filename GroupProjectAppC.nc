@@ -16,11 +16,13 @@ configuration GroupProjectAppC {}
 implementation {
 
   components MainC, GroupProjectC as App, LedsC;
+  components LocalTimeMilliC;
   
   // radio stuff
-  components ActiveMessageC;
+  components CC2420TimeSyncMessageC as Radio;
   components new AMSenderC(AM_GROUP_PROJECT_MSG);
   components new AMReceiverC(AM_GROUP_PROJECT_MSG);
+  components new AMReceiverC(AM_SYNC) as TimeSyncAMReceiverC;
   components new TimerMilliC();
   
   // serial port
@@ -48,13 +50,16 @@ implementation {
   
   App.Boot -> MainC.Boot;
   
-  App.Receive -> AMReceiverC;
-  App.AMSend -> AMSenderC;
-  App.AMControl -> ActiveMessageC;
-  App.Packet -> AMSenderC;
+  App.RadioReceive -> AMReceiverC;
+  App.RadioTimeSyncReceive -> TimeSyncAMReceiverC;
+  App.RadioSend -> AMSenderC;
+  App.RadioControl -> Radio;
+  App.RadioPacket -> AMSenderC;
+  App.RadioTimeSyncPacket -> Radio.TimeSyncPacketMilli;
+  App.RadioTimeSyncSend -> Radio.TimeSyncAMSendMilli[AM_SYNC];
 
   App.SerialSend -> SerialAMSenderC;
   App.Leds -> LedsC;
   App.MilliTimer -> TimerMilliC;
-  
+  App.LocalTime -> LocalTimeMilliC;
 }

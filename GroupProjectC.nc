@@ -15,27 +15,41 @@
  
 module GroupProjectC @safe() {
   uses {
+    // Basic interfaces
     interface Leds;
     interface Boot;
-    interface Receive;
-    interface AMSend;
-    interface Timer<TMilli> as MilliTimer;
-    interface SplitControl as AMControl;
-    interface Packet;
-    interface Notify<group_project_msg_t>;
-    interface Cache<cache_entry_t>;
-    interface Pool<message_t>;
-    interface Queue<message_t *>;
-    interface AMSend as SerialSend;
 #ifndef COOJA
     interface StdControl as ClockCalibControl;
 #endif
     interface Random;
+    
+    // Interfaces for radio communication
+    interface Receive as RadioReceive;
+    interface Receive as RadioTimeSyncReceive;
+    interface AMSend as RadioSend;
+    interface SplitControl as RadioControl;
+    interface Packet as RadioPacket;
+    interface TimeSyncPacket<TMilli, uint32_t> as RadioTimeSyncPacket;
+    interface TimeSyncAMSend<TMilli, uint32_t> as RadioTimeSyncSend;
+    
+    // Timer
+    interface Timer<TMilli> as MilliTimer;
+    interface LocalTime<TMilli> as LocalTime;
+    
+    // Interfaces for message management
+    interface Notify<group_project_msg_t>;
+    interface Cache<cache_entry_t>;
+    interface Pool<message_t>;
+    interface Queue<message_t *>;
+    
+    // Interfaces for serial output
+    interface AMSend as SerialSend;
+    
   }
 }
 implementation {
 
-#undef debug_printf
+//#undef debug_printf
 #ifdef debug_printf
 #warning debug printf enabled
 #undef dbg
@@ -49,6 +63,8 @@ implementation {
   bool locked;
   bool radioOn;
   uint8_t seq_no = 0;
+  
+  message_t packet_sync;
   
   // function prototypes
   error_t enqueue(message_t * m);
@@ -116,24 +132,29 @@ implementation {
   };
   
   event void Boot.booted() {
-    call AMControl.start();
+    timesync_msg_t *tsm;
+    
+    call RadioControl.start();
 #ifndef COOJA
     call ClockCalibControl.start();
 #endif
+
+    tsm = (timesync_msg_t*)call RadioPacket.getPayload(&packet_sync, sizeof(group_project_msg_t));
+    tsm->dummy = 'X';
   }
   
-  event void AMControl.startDone(error_t err) {
+  event void RadioControl.startDone(error_t err) {
     if (err == SUCCESS) {
       radioOn=TRUE;
       call Leds.led1On();
       dbg("GroupProjectC", "Radio on, datarate is %u.\n", datarate);
     }
     else {
-      call AMControl.start();
+      call RadioControl.start();
     }
   }
   
-  event void AMControl.stopDone(error_t err) {
+  event void RadioControl.stopDone(error_t err) {
     // do nothing
   }
       
@@ -141,23 +162,29 @@ implementation {
     error_t ret;
     // sink node prints out data on serial port
     if (TOS_NODE_ID == SINK_ADDRESS) {
-       ret = call SerialSend.send(AM_BROADCAST_ADDR, call Queue.head(), sizeof(group_project_msg_t));
-       dbg("GroupProjectC", "wuut?");
+      ret = call SerialSend.send(AM_BROADCAST_ADDR, call Queue.head(), sizeof(group_project_msg_t));
+      
+      call RadioTimeSyncSend.send(AM_BROADCAST_ADDR, &packet_sync, sizeof(group_project_msg_t), call LocalTime.get());
     }
     // other nodes forward data over radio
     else {
-      ret = call AMSend.send(AM_BROADCAST_ADDR, call Queue.head(), sizeof(group_project_msg_t));
+      ret = call RadioSend.send(AM_BROADCAST_ADDR, call Queue.head(), sizeof(group_project_msg_t));
     }
     if (ret != SUCCESS) {
       startForwardTimer(); // retry in a short while
     }
   }
 
-  event message_t* Receive.receive(message_t* bufPtr, void* payload, uint8_t len) {
+  event message_t* RadioReceive.receive(message_t* bufPtr, void* payload, uint8_t len) {
     if (len != sizeof(group_project_msg_t)) {return bufPtr;}
     else {
       return forward(bufPtr);
     }
+  }
+  
+  event message_t* RadioTimeSyncReceive.receive(message_t* bufPtr, void* payload, uint8_t len) {
+    dbg("timesync", "YAY!! Got a sync packet.");
+    return bufPtr;
   }
 
   event void Notify.notify(group_project_msg_t datamsg) {
@@ -174,14 +201,17 @@ implementation {
       dbg("GroupProjectC", "Notify: No more message buffers.\n");
       return;
     }
-    gpm = (group_project_msg_t*)call Packet.getPayload(m, sizeof(group_project_msg_t));
+    gpm = (group_project_msg_t*)call RadioPacket.getPayload(m, sizeof(group_project_msg_t));
     *gpm = datamsg;
     // enqueue packet
     enqueue(m);
   }
   
-  event void AMSend.sendDone(message_t* bufPtr, error_t error) {
+  event void RadioSend.sendDone(message_t* bufPtr, error_t error) {
     senddone(bufPtr, error);
+  }
+  
+  event void RadioTimeSyncSend.sendDone(message_t* bufPtr, error_t error) {
   }
   
   event void SerialSend.sendDone(message_t* bufPtr, error_t error) {
@@ -207,7 +237,7 @@ implementation {
       startForwardTimer();
     }
     
-    dbg("GroupProjectC", "enq(%u,%u) p:%u q:%u\n", c.source, c.seq_no, call Pool.size(), call Queue.size());
+    dbg("GroupProjectC", "enqueued (%u,%u) p:%u q:%u\n", c.source, c.seq_no, call Pool.size(), call Queue.size());
     return SUCCESS;
   }
   
@@ -237,7 +267,7 @@ implementation {
   
   void message_to_cache_entry(message_t *m, cache_entry_t * c) {
     group_project_msg_t* gpm;
-    gpm = (group_project_msg_t*)call Packet.getPayload(m, sizeof(group_project_msg_t));
+    gpm = (group_project_msg_t*)call RadioPacket.getPayload(m, sizeof(group_project_msg_t));
     c->source = gpm->source;
     c->seq_no = gpm->seq_no;
   }

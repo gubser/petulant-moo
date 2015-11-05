@@ -24,8 +24,13 @@ typedef nx_struct group_project_msg {
   nx_uint16_t data;
 } group_project_msg_t;
 
+typedef nx_struct timesync_msg {
+  nx_uint8_t dummy;
+} timesync_msg_t;
+
 enum {
   AM_GROUP_PROJECT_MSG = 6,
+  AM_SYNC = 0xA1
 };
 
 typedef struct cache_entry {
