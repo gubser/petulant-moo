@@ -61,6 +61,60 @@ implementation {
     FORWARD_DELAY_MS = 3, // max wait time between two forwarded packets
   };
   
+  schedule_t schedule[] = { {
+    0,    // device id
+    1000, // period
+    22,  // slotsize
+    0,    // recv start
+    0,    // recv stop
+    0,    // recv ack start
+    0,    // recv ack stop
+    0,    // send start
+    1,    // send stop
+    3,    // send ack start
+    4,    // send ack stop
+  },
+  {
+    1,    // device id
+    1000, // period
+    22,  // slotsize
+    0,    // recv start
+    0,    // recv stop
+    0,    // recv ack start
+    0,    // recv ack stop
+    1,    // send start
+    2,    // send stop
+    3,    // send ack start
+    4,    // send ack stop
+  },
+  {
+    2,    // device id
+    1000, // period
+    22,  // slotsize
+    0,    // recv start
+    0,    // recv stop
+    0,    // recv ack start
+    0,    // recv ack stop
+    2,    // send start
+    3,    // send stop
+    3,    // send ack start
+    4,    // send ack stop
+  },
+  {
+    3,    // device id
+    1000, // period ms
+    22,  // slotsize
+    0,    // recv start
+    3,    // recv stop
+    3,    // recv ack start
+    4,    // recv ack stop
+    8,    // send start
+    9,    // send stop
+    10,    // send ack start
+    11,    // send ack stop
+  },
+  };
+  
   event void Boot.booted() {
     call AMControl.start();
 #ifndef COOJA

@@ -1,3 +1,14 @@
+# DataGenerator
+```
+typedef nx_struct group_project_msg {
+  nx_am_addr_t source;	// nx_uint16_t
+  nx_uint8_t seq_no;
+  nx_uint16_t data;
+} group_project_msg_t;
+```
+Total 40bit = 5 bytes payload
+
+# Useful Links
 Network topology discovery, monitoring, history, and visualization.
 --------------------------------------------------------------------
 https://www.cs.cornell.edu/boom/1999sp/projects/Network%20Topology/topology.html

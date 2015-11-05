@@ -2,6 +2,22 @@
 #define GROUP_PROJECT_H
 #include <AM.h>
 
+typedef nx_struct schedule {
+  nx_uint8_t device_id;
+  nx_uint16_t period;          // period in ms
+  nx_uint16_t slotsize;        // 
+  nx_uint8_t recv_start;
+  nx_uint8_t recv_stop;
+  nx_uint8_t recv_ack_start;
+  nx_uint8_t recv_ack_stop;
+  nx_uint8_t send_start;
+  nx_uint8_t send_stop;
+  nx_uint8_t send_ack_start;
+  nx_uint8_t send_ack_stop;
+} schedule_t;
+
+
+
 typedef nx_struct group_project_msg {
   nx_am_addr_t source;
   nx_uint8_t seq_no;
