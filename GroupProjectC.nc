@@ -49,7 +49,7 @@ module GroupProjectC @safe() {
 }
 implementation {
 
-//#undef debug_printf
+#undef debug_printf
 #ifdef debug_printf
 #warning debug printf enabled
 #undef dbg
@@ -132,15 +132,10 @@ implementation {
   };
   
   event void Boot.booted() {
-    timesync_msg_t *tsm;
-    
     call RadioControl.start();
 #ifndef COOJA
     call ClockCalibControl.start();
 #endif
-
-    tsm = (timesync_msg_t*)call RadioPacket.getPayload(&packet_sync, sizeof(group_project_msg_t));
-    tsm->dummy = 'X';
   }
   
   event void RadioControl.startDone(error_t err) {
@@ -163,8 +158,6 @@ implementation {
     // sink node prints out data on serial port
     if (TOS_NODE_ID == SINK_ADDRESS) {
       ret = call SerialSend.send(AM_BROADCAST_ADDR, call Queue.head(), sizeof(group_project_msg_t));
-      
-      call RadioTimeSyncSend.send(AM_BROADCAST_ADDR, &packet_sync, sizeof(group_project_msg_t), call LocalTime.get());
     }
     // other nodes forward data over radio
     else {
@@ -183,7 +176,6 @@ implementation {
   }
   
   event message_t* RadioTimeSyncReceive.receive(message_t* bufPtr, void* payload, uint8_t len) {
-    dbg("timesync", "YAY!! Got a sync packet.");
     return bufPtr;
   }
 
@@ -212,6 +204,7 @@ implementation {
   }
   
   event void RadioTimeSyncSend.sendDone(message_t* bufPtr, error_t error) {
+    dbg("TimeSync", "Received");
   }
   
   event void SerialSend.sendDone(message_t* bufPtr, error_t error) {
