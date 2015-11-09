@@ -49,7 +49,7 @@ module GroupProjectC @safe() {
 }
 implementation {
 
-#undef debug_printf
+//#undef debug_printf
 #ifdef debug_printf
 #warning debug printf enabled
 #undef dbg
@@ -155,9 +155,22 @@ implementation {
       
   event void MilliTimer.fired() {
     error_t ret;
+    error_t retsync;
+    timesync_msg_t *msg;
+    
     // sink node prints out data on serial port
     if (TOS_NODE_ID == SINK_ADDRESS) {
       ret = call SerialSend.send(AM_BROADCAST_ADDR, call Queue.head(), sizeof(group_project_msg_t));
+      
+      msg = (timesync_msg_t*)call RadioTimeSyncSend.getPayload(&packet_sync, sizeof(timesync_msg_t));
+      msg->scheduleStart = 3000; // start schedule in 3s from now
+      retsync = call RadioTimeSyncSend.send(AM_BROADCAST_ADDR, &packet_sync, sizeof(timesync_msg_t), call LocalTime.get());
+      
+      if(retsync != SUCCESS) {
+        dbg("TimeSync", "Fail to send\n");
+      } else {
+        dbg("TimeSync", "Send() returned SUCCESS\n");
+      }
     }
     // other nodes forward data over radio
     else {
@@ -169,13 +182,19 @@ implementation {
   }
 
   event message_t* RadioReceive.receive(message_t* bufPtr, void* payload, uint8_t len) {
-    if (len != sizeof(group_project_msg_t)) {return bufPtr;}
-    else {
+    if(len == sizeof(group_project_msg_t)) {
       return forward(bufPtr);
     }
+    if(len == sizeof(timesync_msg_t)) {
+      dbg("RadioReceive", "Received TimeSync in RadioReceive\n");
+      return bufPtr;
+    }
+    dbg("RadioReceive", "Unknown in RadioReceive\n");
+    return bufPtr;
   }
   
   event message_t* RadioTimeSyncReceive.receive(message_t* bufPtr, void* payload, uint8_t len) {
+    dbg("RadioTimeSyncReceive", "Received TimeSync in RadioTimeSyncReceive\n");
     return bufPtr;
   }
 
@@ -204,7 +223,7 @@ implementation {
   }
   
   event void RadioTimeSyncSend.sendDone(message_t* bufPtr, error_t error) {
-    dbg("TimeSync", "Received");
+    dbg("TimeSync", "RadioTimeSyncSend: Sent \n");
   }
   
   event void SerialSend.sendDone(message_t* bufPtr, error_t error) {
@@ -236,7 +255,6 @@ implementation {
   
   message_t * forward(message_t * fm) {
     cache_entry_t c;
-
     // get spare message buffer
     message_t * m = call Pool.get();
     if (m == NULL) {

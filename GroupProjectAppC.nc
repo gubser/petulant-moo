@@ -22,7 +22,6 @@ implementation {
   components CC2420TimeSyncMessageC as Radio;
   components new AMSenderC(AM_GROUP_PROJECT_MSG);
   components new AMReceiverC(AM_GROUP_PROJECT_MSG);
-  components new AMReceiverC(AM_SYNC) as TimeSyncAMReceiverC;
   components new TimerMilliC();
   
   // serial port
@@ -51,11 +50,10 @@ implementation {
   App.Boot -> MainC.Boot;
   
   App.RadioReceive -> AMReceiverC;
-  App.RadioTimeSyncReceive -> TimeSyncAMReceiverC;
   App.RadioSend -> AMSenderC;
   App.RadioControl -> Radio;
   App.RadioPacket -> AMSenderC;
-  App.RadioTimeSyncPacket -> Radio.TimeSyncPacketMilli;
+  App.RadioTimeSyncReceive -> Radio.Receive[AM_SYNC];
   App.RadioTimeSyncSend -> Radio.TimeSyncAMSendMilli[AM_SYNC];
 
   App.SerialSend -> SerialAMSenderC;
