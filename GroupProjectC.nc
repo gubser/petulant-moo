@@ -34,6 +34,8 @@ module GroupProjectC @safe() {
     
     // Timer
     interface Timer<TMilli> as MilliTimer;
+    interface Timer<TMilli> as TimeSyncTimer;
+    interface Timer<TMilli> as TimeSyncLaunch;
     interface LocalTime<TMilli> as LocalTime;
     
     // Interfaces for message management
@@ -64,7 +66,13 @@ implementation {
   bool radioOn;
   uint8_t seq_no = 0;
   
-  message_t packet_sync;
+  /*
+   * Time Synchronization
+   */
+  message_t sync_packet;
+  uint16_t sync_tag;
+  uint32_t sync_recvTime;
+  uint32_t sync_remaining;
   
   // function prototypes
   error_t enqueue(message_t * m);
@@ -75,6 +83,7 @@ implementation {
   
   enum {
     FORWARD_DELAY_MS = 3, // max wait time between two forwarded packets
+    TIMESYNC_DELAY_MS = 3, // delay multiplied by id for TDMA-like flooding
   };
   
   schedule_t schedule[] = { {
@@ -143,6 +152,10 @@ implementation {
       radioOn=TRUE;
       call Leds.led1On();
       dbg("GroupProjectC", "Radio on, datarate is %u.\n", datarate);
+      if(TOS_NODE_ID == SINK_ADDRESS) {
+        dbg("GroupProjectC", "Emitting timesync packets.\n");
+        call TimeSyncTimer.startPeriodic(5000);
+      }
     }
     else {
       call RadioControl.start();
@@ -155,22 +168,10 @@ implementation {
       
   event void MilliTimer.fired() {
     error_t ret;
-    error_t retsync;
-    timesync_msg_t *msg;
     
     // sink node prints out data on serial port
     if (TOS_NODE_ID == SINK_ADDRESS) {
       ret = call SerialSend.send(AM_BROADCAST_ADDR, call Queue.head(), sizeof(group_project_msg_t));
-      
-      msg = (timesync_msg_t*)call RadioTimeSyncSend.getPayload(&packet_sync, sizeof(timesync_msg_t));
-      msg->scheduleStart = 3000; // start schedule in 3s from now
-      retsync = call RadioTimeSyncSend.send(AM_BROADCAST_ADDR, &packet_sync, sizeof(timesync_msg_t), call LocalTime.get());
-      
-      if(retsync != SUCCESS) {
-        dbg("TimeSync", "Fail to send\n");
-      } else {
-        dbg("TimeSync", "Send() returned SUCCESS\n");
-      }
     }
     // other nodes forward data over radio
     else {
@@ -185,21 +186,89 @@ implementation {
     if(len == sizeof(group_project_msg_t)) {
       return forward(bufPtr);
     }
-    if(len == sizeof(timesync_msg_t)) {
-      dbg("RadioReceive", "Received TimeSync in RadioReceive\n");
-      return bufPtr;
-    }
-    dbg("RadioReceive", "Unknown in RadioReceive\n");
+    dbg("RadioReceive", "Received unknown packet in RadioReceive\n");
     return bufPtr;
   }
   
   event message_t* RadioTimeSyncReceive.receive(message_t* bufPtr, void* payload, uint8_t len) {
-    dbg("RadioTimeSyncReceive", "Received TimeSync in RadioTimeSyncReceive\n");
+    timesync_msg_t *tsm;
+    uint32_t tnow;
+    
+    if(TOS_NODE_ID == SINK_ADDRESS) {
+      return bufPtr;
+    }
+    
+    if(len == sizeof(timesync_msg_t)) {
+      tsm = (timesync_msg_t*)payload;
+      if(call RadioTimeSyncPacket.isValid(bufPtr) == FALSE) {
+        dbg("RadioTimeSyncReceive", "Invalid Timestamp. Help me! What should I do?\n");
+      }
+      
+      // got a new timesync request?
+      if(sync_tag != tsm->tag) {
+        sync_tag = tsm->tag;
+        sync_recvTime = call RadioTimeSyncPacket.eventTime(bufPtr);
+        sync_remaining = tsm->remaining;
+        
+        tnow = call LocalTime.get();
+        
+        call TimeSyncLaunch.startOneShot(sync_remaining - (tnow - sync_recvTime));
+        
+        dbg("RadioTimeSyncReceive", "sync time: %lu, local time: %lu\n", sync_recvTime, tnow);
+        
+        if(IS_RELAY(TOS_NODE_ID)) {
+          call TimeSyncTimer.startOneShot(TIMESYNC_DELAY_MS*TOS_NODE_ID);
+          
+          if(TIMESYNC_DELAY_MS*TOS_NODE_ID > sync_remaining) {
+            dbg("RadioTimeSyncReceive", "Timing violation\n");
+          }
+        }
+
+      }
+      
+      return bufPtr;
+    }
+    dbg("RadioTimeSyncReceive", "Received unknown packet in RadioTimeSyncReceive\n");
     return bufPtr;
+  }
+  
+  event void TimeSyncTimer.fired() {
+    timesync_msg_t *tsm;
+    error_t ret;
+    uint32_t tnow;
+    
+    if(TOS_NODE_ID == SINK_ADDRESS) {
+      tsm = (timesync_msg_t*) call RadioTimeSyncSend.getPayload(&sync_packet, sizeof(timesync_msg_t));
+      tsm->tag = ++sync_tag;
+      sync_remaining = 1000;
+      tsm->remaining = sync_remaining;
+      
+      call TimeSyncLaunch.startOneShot(sync_remaining);
+      ret = call RadioTimeSyncSend.send(AM_BROADCAST_ADDR, &sync_packet, sizeof(timesync_msg_t), call LocalTime.get());
+    } else {
+      tnow = call LocalTime.get();
+      
+      tsm = (timesync_msg_t*) call RadioTimeSyncSend.getPayload(&sync_packet, sizeof(timesync_msg_t));
+      tsm->tag = sync_tag;
+      tsm->remaining = sync_remaining - (tnow - sync_recvTime);
+      ret = call RadioTimeSyncSend.send(AM_BROADCAST_ADDR, &sync_packet, sizeof(timesync_msg_t), tnow);
+    }
+    
+    if(ret != SUCCESS) {
+      dbg("TimeSyncTimer", "Fail to send\n");
+    }
+  }
+  
+  event void TimeSyncLaunch.fired() {
+    if(sync_tag & 1) {
+      call Leds.led2On();
+    } else {
+      call Leds.led2Off();
+    }
   }
 
   event void Notify.notify(group_project_msg_t datamsg) {
-    message_t * m;
+    /*message_t * m;
     group_project_msg_t* gpm;
     
     call Leds.led0Toggle();
@@ -215,7 +284,7 @@ implementation {
     gpm = (group_project_msg_t*)call RadioPacket.getPayload(m, sizeof(group_project_msg_t));
     *gpm = datamsg;
     // enqueue packet
-    enqueue(m);
+    enqueue(m);*/
   }
   
   event void RadioSend.sendDone(message_t* bufPtr, error_t error) {
@@ -223,7 +292,7 @@ implementation {
   }
   
   event void RadioTimeSyncSend.sendDone(message_t* bufPtr, error_t error) {
-    dbg("TimeSync", "RadioTimeSyncSend: Sent \n");
+    
   }
   
   event void SerialSend.sendDone(message_t* bufPtr, error_t error) {

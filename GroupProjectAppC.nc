@@ -23,9 +23,12 @@ implementation {
   components new AMSenderC(AM_GROUP_PROJECT_MSG);
   components new AMReceiverC(AM_GROUP_PROJECT_MSG);
   components new TimerMilliC();
+  components new TimerMilliC() as TimeSyncTimerC;
+  components new TimerMilliC() as TimeSyncLaunchC;
   
   // serial port
-  components PrintfC, SerialStartC;
+  //components PrintfC, SerialStartC;
+  components SerialPrintfC;
   components new SerialAMSenderC(AM_GROUP_PROJECT_MSG);
 
   // data generation and forwarding logic
@@ -55,9 +58,12 @@ implementation {
   App.RadioPacket -> AMSenderC;
   App.RadioTimeSyncReceive -> Radio.Receive[AM_SYNC];
   App.RadioTimeSyncSend -> Radio.TimeSyncAMSendMilli[AM_SYNC];
+  App.RadioTimeSyncPacket -> Radio.TimeSyncPacketMilli;
 
   App.SerialSend -> SerialAMSenderC;
   App.Leds -> LedsC;
   App.MilliTimer -> TimerMilliC;
   App.LocalTime -> LocalTimeMilliC;
+  App.TimeSyncTimer -> TimeSyncTimerC;
+  App.TimeSyncLaunch -> TimeSyncLaunchC;
 }

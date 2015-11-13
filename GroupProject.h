@@ -2,6 +2,8 @@
 #define GROUP_PROJECT_H
 #include <AM.h>
 
+#define IS_RELAY(id) (id == 15 || id == 33 || id == 28)
+
 typedef nx_struct schedule {
   nx_uint8_t device_id;
   nx_uint16_t period;          // period in ms
@@ -25,7 +27,8 @@ typedef nx_struct group_project_msg {
 } group_project_msg_t;
 
 typedef nx_struct timesync_msg {
-  nx_uint32_t scheduleStart;
+  nx_uint16_t tag;
+  nx_uint32_t remaining;
 } timesync_msg_t;
 
 enum {
