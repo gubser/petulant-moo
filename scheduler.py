@@ -56,16 +56,16 @@ class M:
     
     def generate(self, period, slotsize):
         params = {
-            'deviceid': self.moteid,
+            'device_id': self.moteid,
             'period': period,
             'slotsize': slotsize,
-            'listen': self.listen,
-            'listen_ack': self.listen_ack,
-            'send': self.send,
-            'send_ack': self.send_ack
+            'listen': self.listen or 0,
+            'listen_ack': self.listen_ack or 0,
+            'send': self.send or 0,
+            'send_ack': self.send_ack or 0
         }
         
-        return "{{ {deviceid:>3}, {period:>5}, {slotsize:>3}, {listen:>3}, {listen_ack:>3}, {send:>3}, {send_ack:>3} }},".format(**params)
+        return "{{ .device_id = {device_id:>3}, .period = {period:>5}, .slotsize = {slotsize:>3}, .listen = {listen:>3}, .listen_ack = {listen_ack:>3}, .send = {send:>3}, .send_ack = {send_ack:>3} }},".format(**params)
     
     def generate_all(self, period, slotsize):
         lines = []
