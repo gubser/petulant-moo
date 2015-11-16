@@ -91,22 +91,22 @@ implementation {
 
   schedule_t mySchedule;
   
-  schedule_t get_schedule() {
+  void get_schedule() {
     switch(TOS_NODE_ID) {
-      case 6: return (schedule_t){ .device_id =   6, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =   0, .send_ack =   4 };
-      case 16: return (schedule_t){ .device_id =  16, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =   1, .send_ack =   4 };
-      case 22: return (schedule_t){ .device_id =  22, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =   2, .send_ack =   4 };
-      case 18: return (schedule_t){ .device_id =  18, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =   3, .send_ack =   4 };
-      case 28: return (schedule_t){ .device_id =  28, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   4, .send =   5, .send_ack =   9 };
-      case 3: return (schedule_t){ .device_id =   3, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =   6, .send_ack =   9 };
-      case 32: return (schedule_t){ .device_id =  32, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =   7, .send_ack =   9 };
-      case 31: return (schedule_t){ .device_id =  31, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =   8, .send_ack =   9 };
-      case 33: return (schedule_t){ .device_id =  33, .period =  1000, .slotsize =  10, .listen =   5, .listen_ack =   9, .send =  10, .send_ack =  15 };
-      case 2: return (schedule_t){ .device_id =   2, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =  11, .send_ack =  15 };
-      case 4: return (schedule_t){ .device_id =   4, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =  12, .send_ack =  15 };
-      case 8: return (schedule_t){ .device_id =   8, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =  13, .send_ack =  15 };
-      case 15: return (schedule_t){ .device_id =  15, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =  14, .send_ack =  15 };
-      case 1: return (schedule_t){ .device_id =   1, .period =  1000, .slotsize =  10, .listen =  10, .listen_ack =  15, .send =   0, .send_ack =   0 };
+      case 6: { mySchedule.device_id =   6; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   0; mySchedule.send_ack =   4; } break;
+      case 16: { mySchedule.device_id =  16; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   1; mySchedule.send_ack =   4; } break;
+      case 22: { mySchedule.device_id =  22; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   2; mySchedule.send_ack =   4; } break;
+      case 18: { mySchedule.device_id =  18; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   3; mySchedule.send_ack =   4; } break;
+      case 28: { mySchedule.device_id =  28; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   4; mySchedule.send =   5; mySchedule.send_ack =   9; } break;
+      case 3: { mySchedule.device_id =   3; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   6; mySchedule.send_ack =   9; } break;
+      case 32: { mySchedule.device_id =  32; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   7; mySchedule.send_ack =   9; } break;
+      case 31: { mySchedule.device_id =  31; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   8; mySchedule.send_ack =   9; } break;
+      case 33: { mySchedule.device_id =  33; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   5; mySchedule.listen_ack =   9; mySchedule.send =  10; mySchedule.send_ack =  15; } break;
+      case 2: { mySchedule.device_id =   2; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  11; mySchedule.send_ack =  15; } break;
+      case 4: { mySchedule.device_id =   4; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  12; mySchedule.send_ack =  15; } break;
+      case 8: { mySchedule.device_id =   8; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  13; mySchedule.send_ack =  15; } break;
+      case 15: { mySchedule.device_id =  15; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  14; mySchedule.send_ack =  15; } break;
+      case 1: { mySchedule.device_id =   1; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =  10; mySchedule.listen_ack =  15; mySchedule.send =   0; mySchedule.send_ack =   0; } break;
     }
   }
   
@@ -117,7 +117,7 @@ implementation {
 #ifndef COOJA
     call ClockCalibControl.start();
 #endif
-    mySchedule = get_schedule();
+    get_schedule();
   }
   
   event void RadioControl.startDone(error_t err) {

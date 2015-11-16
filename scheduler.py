@@ -66,7 +66,8 @@ class M:
         }
         
         #return "{{ .device_id = {device_id:>3}, .period = {period:>5}, .slotsize = {slotsize:>3}, .listen = {listen:>3}, .listen_ack = {listen_ack:>3}, .send = {send:>3}, .send_ack = {send_ack:>3} }},".format(**params)
-        return "    case {device_id}: return (schedule_t){{ .device_id = {device_id:>3}, .period = {period:>5}, .slotsize = {slotsize:>3}, .listen = {listen:>3}, .listen_ack = {listen_ack:>3}, .send = {send:>3}, .send_ack = {send_ack:>3} }},".format(**params)
+        #return "    case {device_id}: return (schedule_t){{ .device_id = {device_id:>3}, .period = {period:>5}, .slotsize = {slotsize:>3}, .listen = {listen:>3}, .listen_ack = {listen_ack:>3}, .send = {send:>3}, .send_ack = {send_ack:>3} }},".format(**params)
+        return "      case {device_id}: {{ mySchedule.device_id = {device_id:>3}; mySchedule.period = {period:>5}; mySchedule.slotsize = {slotsize:>3}; mySchedule.listen = {listen:>3}; mySchedule.listen_ack = {listen_ack:>3}; mySchedule.send = {send:>3}; mySchedule.send_ack = {send_ack:>3}; }} break;".format(**params)
     
     def generate_all(self, period, slotsize):
         lines = []
