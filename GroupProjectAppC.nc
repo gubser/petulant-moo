@@ -25,6 +25,7 @@ implementation {
   components new TimerMilliC();
   components new TimerMilliC() as TimeSyncTimerC;
   components new TimerMilliC() as TimeSyncLaunchC;
+  components new TimerMilliC() as TimeSyncSlotsC;
   
   // serial port
   //components PrintfC, SerialStartC;
@@ -66,4 +67,5 @@ implementation {
   App.LocalTime -> LocalTimeMilliC;
   App.TimeSyncTimer -> TimeSyncTimerC;
   App.TimeSyncLaunch -> TimeSyncLaunchC;
+  App.TimeSyncSlots -> TimeSyncSlotsC;
 }

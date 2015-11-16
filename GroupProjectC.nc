@@ -36,8 +36,9 @@ module GroupProjectC @safe() {
     interface Timer<TMilli> as MilliTimer;
     interface Timer<TMilli> as TimeSyncTimer;
     interface Timer<TMilli> as TimeSyncLaunch;
+    interface Timer<TMilli> as TimeSyncSlots;
     interface LocalTime<TMilli> as LocalTime;
-    
+
     // Interfaces for message management
     interface Notify<group_project_msg_t>;
     interface Cache<cache_entry_t>;
@@ -85,7 +86,7 @@ implementation {
     FORWARD_DELAY_MS = 3, // max wait time between two forwarded packets
     TIMESYNC_DELAY_MS = 3, // delay multiplied by id for TDMA-like flooding
   };
-  
+ 
   schedule_t schedule[] = { {
     0,    // device id
     1000, // period
@@ -259,14 +260,40 @@ implementation {
     }
   }
   
-  event void TimeSyncLaunch.fired() {
-    if(sync_tag & 1) {
-      call Leds.led2On();
-    } else {
+
+  event void TimeSyncSlots.fired() {
       call Leds.led2Off();
-    }
+
+      call RadioControl.stop();
+
+      radioOn=FALSE;    
   }
 
+
+  event void TimeSyncLaunch.fired() {
+    uint32_t tnow;
+    uint8_t dt;
+    uint8_t node = TOS_NODE_ID;
+
+    tnow = call LocalTime.get();
+    dt = schedule[node - 1].send_ack_stop;
+
+    call Leds.led2On();    
+    call RadioControl.start();
+    radioOn=FALSE;    
+
+    call TimeSyncSlots.startOneShot(tnow + dt);
+
+
+    //if(sync_tag & 1) {
+    // } else {
+    //}
+  }
+
+
+
+  
+  
   event void Notify.notify(group_project_msg_t datamsg) {
     /*message_t * m;
     group_project_msg_t* gpm;
