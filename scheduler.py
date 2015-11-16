@@ -65,7 +65,8 @@ class M:
             'send_ack': self.send_ack or 0
         }
         
-        return "{{ .device_id = {device_id:>3}, .period = {period:>5}, .slotsize = {slotsize:>3}, .listen = {listen:>3}, .listen_ack = {listen_ack:>3}, .send = {send:>3}, .send_ack = {send_ack:>3} }},".format(**params)
+        #return "{{ .device_id = {device_id:>3}, .period = {period:>5}, .slotsize = {slotsize:>3}, .listen = {listen:>3}, .listen_ack = {listen_ack:>3}, .send = {send:>3}, .send_ack = {send_ack:>3} }},".format(**params)
+        return "    case {device_id}: return (schedule_t){{ .device_id = {device_id:>3}, .period = {period:>5}, .slotsize = {slotsize:>3}, .listen = {listen:>3}, .listen_ack = {listen_ack:>3}, .send = {send:>3}, .send_ack = {send_ack:>3} }},".format(**params)
     
     def generate_all(self, period, slotsize):
         lines = []
