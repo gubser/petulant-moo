@@ -65,6 +65,8 @@ implementation {
 
   bool locked;
   bool radioOn;
+  uint8_t currentState;
+  
   uint8_t seq_no = 0;
   
   /*
@@ -86,66 +88,36 @@ implementation {
     FORWARD_DELAY_MS = 3, // max wait time between two forwarded packets
     TIMESYNC_DELAY_MS = 3, // delay multiplied by id for TDMA-like flooding
   };
- 
-  schedule_t schedule[] = { {
-    0,    // device id
-    1000, // period
-    22,  // slotsize
-    0,    // recv start
-    0,    // recv stop
-    0,    // recv ack start
-    0,    // recv ack stop
-    0,    // send start
-    1,    // send stop
-    3,    // send ack start
-    4,    // send ack stop
-  },
-  {
-    1,    // device id
-    1000, // period
-    22,  // slotsize
-    0,    // recv start
-    0,    // recv stop
-    0,    // recv ack start
-    0,    // recv ack stop
-    1,    // send start
-    2,    // send stop
-    3,    // send ack start
-    4,    // send ack stop
-  },
-  {
-    2,    // device id
-    1000, // period
-    22,  // slotsize
-    0,    // recv start
-    0,    // recv stop
-    0,    // recv ack start
-    0,    // recv ack stop
-    2,    // send start
-    3,    // send stop
-    3,    // send ack start
-    4,    // send ack stop
-  },
-  {
-    3,    // device id
-    1000, // period ms
-    22,  // slotsize
-    0,    // recv start
-    3,    // recv stop
-    3,    // recv ack start
-    4,    // recv ack stop
-    8,    // send start
-    9,    // send stop
-    10,    // send ack start
-    11,    // send ack stop
-  },
-  };
+
+  schedule_t mySchedule;
+  
+  schedule_t get_schedule() {
+    switch(TOS_NODE_ID) {
+      case 6: return (schedule_t){ .device_id =   6, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =   0, .send_ack =   4 };
+      case 16: return (schedule_t){ .device_id =  16, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =   1, .send_ack =   4 };
+      case 22: return (schedule_t){ .device_id =  22, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =   2, .send_ack =   4 };
+      case 18: return (schedule_t){ .device_id =  18, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =   3, .send_ack =   4 };
+      case 28: return (schedule_t){ .device_id =  28, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   4, .send =   5, .send_ack =   9 };
+      case 3: return (schedule_t){ .device_id =   3, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =   6, .send_ack =   9 };
+      case 32: return (schedule_t){ .device_id =  32, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =   7, .send_ack =   9 };
+      case 31: return (schedule_t){ .device_id =  31, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =   8, .send_ack =   9 };
+      case 33: return (schedule_t){ .device_id =  33, .period =  1000, .slotsize =  10, .listen =   5, .listen_ack =   9, .send =  10, .send_ack =  15 };
+      case 2: return (schedule_t){ .device_id =   2, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =  11, .send_ack =  15 };
+      case 4: return (schedule_t){ .device_id =   4, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =  12, .send_ack =  15 };
+      case 8: return (schedule_t){ .device_id =   8, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =  13, .send_ack =  15 };
+      case 15: return (schedule_t){ .device_id =  15, .period =  1000, .slotsize =  10, .listen =   0, .listen_ack =   0, .send =  14, .send_ack =  15 };
+      case 1: return (schedule_t){ .device_id =   1, .period =  1000, .slotsize =  10, .listen =  10, .listen_ack =  15, .send =   0, .send_ack =   0 };
+    }
+  }
   
   event void Boot.booted() {
+    int i;
+
     call RadioControl.start();
 #ifndef COOJA
     call ClockCalibControl.start();
 #endif
+    mySchedule = get_schedule();
   }
   
   event void RadioControl.startDone(error_t err) {
@@ -155,7 +127,8 @@ implementation {
       dbg("GroupProjectC", "Radio on, datarate is %u.\n", datarate);
       if(TOS_NODE_ID == SINK_ADDRESS) {
         dbg("GroupProjectC", "Emitting timesync packets.\n");
-        call TimeSyncTimer.startPeriodic(5000);
+        //call TimeSyncTimer.startPeriodic(5000);
+        call TimeSyncTimer.startOneShot(5000);
       }
     }
     else {
@@ -261,33 +234,107 @@ implementation {
   }
   
 
+
+
+
+  uint32_t slotScheduler() {
+    uint32_t dt = 0;
+
+    uint8_t nextState;
+
+    switch (currentState) {
+        case MODE_INIT: {
+          dbg("GroupProjectC", "MODE_INIT\n");
+          if (mySchedule.listen == mySchedule.listen_ack) {
+            nextState = MODE_SEND_ON;
+            dt = mySchedule.send;
+          } 
+          else {
+            currentState = MODE_LISTEN_ON;
+            dt = mySchedule.listen;
+          }          
+          break;
+        }
+
+        case MODE_LISTEN_ON: {
+          dbg("GroupProjectC", "MODE_LISTEN_ON\n");
+          call Leds.led2On();    
+          call RadioControl.start();
+          nextState = MODE_LISTEN_ACK;
+          dt = mySchedule.listen_ack - mySchedule.listen;
+          break;
+        }
+
+
+        case MODE_LISTEN_ACK: {
+          dbg("GroupProjectC", "MODE_LISTEN_ACK\n");
+          nextState = MODE_LISTEN_OFF;
+          dt = 1;
+          break;
+        }
+
+        case MODE_LISTEN_OFF: {
+          dbg("GroupProjectC", "MODE_LISTEN_OFF\n");
+          call Leds.led2Off();    
+          //call RadioControl.stop();
+          nextState = MODE_SEND_ON;
+          dt = mySchedule.send - (1 + mySchedule.listen_ack);
+          break;
+        }
+
+        case MODE_SEND_ON: {
+          dbg("GroupProjectC", "MODE_SEND_ON\n");
+          call Leds.led2On();    
+          call RadioControl.start();
+          nextState = MODE_SEND_ACK;
+          dt = mySchedule.send_ack - (1 + mySchedule.send);
+          break;
+        }
+
+        case MODE_SEND_ACK: {
+          dbg("GroupProjectC", "MODE_SEND_ACK\n");
+          nextState = MODE_SEND_OFF;
+          dt = 1;
+          break;
+        }
+
+        case  MODE_SEND_OFF: {
+          dbg("GroupProjectC", "MODE_SEND_OFF\n");
+          call Leds.led2Off();    
+          //call RadioControl.stop();
+          nextState = MODE_LISTEN_ON;
+          dt = mySchedule.period - (1 + mySchedule.send_ack);
+          break;
+        }
+      }
+      
+      currentState = nextState;
+      dt = dt * mySchedule.slotsize;
+
+      return dt;      
+  }
+
+
+
   event void TimeSyncSlots.fired() {
-      call Leds.led2Off();
+    uint32_t dt;
+    uint32_t t1;
+    t1 = call TimeSyncSlots.gett0() + call TimeSyncSlots.getdt();
 
-      call RadioControl.stop();
+    dt = slotScheduler();
 
-      radioOn=FALSE;    
+    call TimeSyncSlots.startOneShotAt(t1, dt);
   }
 
 
   event void TimeSyncLaunch.fired() {
-    uint32_t tnow;
     uint8_t dt;
-    uint8_t node = TOS_NODE_ID;
 
-    tnow = call LocalTime.get();
-    dt = schedule[node - 1].send_ack_stop;
+    currentState = MODE_INIT;
 
-    call Leds.led2On();    
-    call RadioControl.start();
-    radioOn=FALSE;    
+    dt = slotScheduler();
+    call TimeSyncSlots.startOneShot(dt);
 
-    call TimeSyncSlots.startOneShot(tnow + dt);
-
-
-    //if(sync_tag & 1) {
-    // } else {
-    //}
   }
 
 

@@ -4,7 +4,17 @@
 
 #define IS_RELAY(id) (id == 15 || id == 33 || id == 28)
 
-typedef nx_struct schedule {
+enum {
+  MODE_INIT = 0,
+  MODE_LISTEN_ON,
+  MODE_LISTEN_ACK,
+  MODE_LISTEN_OFF,
+  MODE_SEND_ON,
+  MODE_SEND_ACK,
+  MODE_SEND_OFF
+};
+
+typedef nx_struct _schedule_t {
   nx_uint8_t device_id;
   nx_uint16_t period;          // period in ms
   nx_uint16_t slotsize;        // 
