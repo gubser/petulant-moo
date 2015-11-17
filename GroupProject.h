@@ -19,8 +19,6 @@ enum {
 typedef nx_struct _schedule_t {
   nx_uint8_t device_id;
   nx_uint8_t sendto;
-  nx_uint16_t period;          // period in ms
-  nx_uint16_t slotsize;        // 
   nx_uint8_t listen;
   nx_uint8_t listen_ack;
   nx_uint8_t send;
