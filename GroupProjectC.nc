@@ -97,20 +97,20 @@ implementation {
   
   void get_schedule() {
     switch(TOS_NODE_ID) {
-      case 6: { mySchedule.device_id =   6; mySchedule.sendto =   6; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   0; mySchedule.send_ack =   4; } break;
+      case  6: { mySchedule.device_id =   6; mySchedule.sendto =   6; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   0; mySchedule.send_ack =   4; } break;
       case 16: { mySchedule.device_id =  16; mySchedule.sendto =  16; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   1; mySchedule.send_ack =   4; } break;
       case 22: { mySchedule.device_id =  22; mySchedule.sendto =  22; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   2; mySchedule.send_ack =   4; } break;
       case 18: { mySchedule.device_id =  18; mySchedule.sendto =  18; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   3; mySchedule.send_ack =   4; } break;
       case 28: { mySchedule.device_id =  28; mySchedule.sendto =  28; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   4; mySchedule.send =   5; mySchedule.send_ack =   9; } break;
-      case 3: { mySchedule.device_id =   3; mySchedule.sendto =   3; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   6; mySchedule.send_ack =   9; } break;
+      case  3: { mySchedule.device_id =   3; mySchedule.sendto =   3; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   6; mySchedule.send_ack =   9; } break;
       case 32: { mySchedule.device_id =  32; mySchedule.sendto =  32; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   7; mySchedule.send_ack =   9; } break;
       case 31: { mySchedule.device_id =  31; mySchedule.sendto =  31; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   8; mySchedule.send_ack =   9; } break;
       case 33: { mySchedule.device_id =  33; mySchedule.sendto =  33; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   5; mySchedule.listen_ack =   9; mySchedule.send =  10; mySchedule.send_ack =  15; } break;
-      case 2: { mySchedule.device_id =   2; mySchedule.sendto =   2; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  11; mySchedule.send_ack =  15; } break;
-      case 4: { mySchedule.device_id =   4; mySchedule.sendto =   4; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  12; mySchedule.send_ack =  15; } break;
-      case 8: { mySchedule.device_id =   8; mySchedule.sendto =   8; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  13; mySchedule.send_ack =  15; } break;
+      case  2: { mySchedule.device_id =   2; mySchedule.sendto =   2; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  11; mySchedule.send_ack =  15; } break;
+      case  4: { mySchedule.device_id =   4; mySchedule.sendto =   4; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  12; mySchedule.send_ack =  15; } break;
+      case  8: { mySchedule.device_id =   8; mySchedule.sendto =   8; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  13; mySchedule.send_ack =  15; } break;
       case 15: { mySchedule.device_id =  15; mySchedule.sendto =  15; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  14; mySchedule.send_ack =  15; } break;
-      case 1: { mySchedule.device_id =   1; mySchedule.sendto =   1; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =  10; mySchedule.listen_ack =  15; mySchedule.send =   0; mySchedule.send_ack =   0; } break;
+      case  1: { mySchedule.device_id =   1; mySchedule.sendto =   1; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =  10; mySchedule.listen_ack =  15; mySchedule.send =   0; mySchedule.send_ack =   0; } break;
     }
   }
   
