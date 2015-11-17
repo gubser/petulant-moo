@@ -276,7 +276,7 @@ implementation {
         case MODE_LISTEN_OFF: {
           dbg("GroupProjectC", "MODE_LISTEN_OFF\n");
           call Leds.led2Off();    
-          //call RadioControl.stop();
+          call RadioControl.stop();
           nextState = MODE_SEND_ON;
           dt = mySchedule.send - (1 + mySchedule.listen_ack);
           break;
@@ -301,13 +301,15 @@ implementation {
         case  MODE_SEND_OFF: {
           dbg("GroupProjectC", "MODE_SEND_OFF\n");
           call Leds.led2Off();    
-          //call RadioControl.stop();
+          call RadioControl.stop();
           nextState = MODE_LISTEN_ON;
           dt = mySchedule.period - (1 + mySchedule.send_ack);
           break;
         }
       }
       
+
+      dbg("GroupProjectC", "%lu \n", dt);
       currentState = nextState;
       dt = dt * mySchedule.slotsize;
 
