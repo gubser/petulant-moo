@@ -26,7 +26,7 @@
       org.contikios.cooja.mspmote.SkyMoteType
       <identifier>sky1</identifier>
       <description>Sky Mote Type #sky1</description>
-      <firmware EXPORT="copy">[CONFIG_DIR]/top/t2_cur/tinyos-2.x/apps/GroupProject/build/telosb/main.exe</firmware>
+      <firmware EXPORT="copy">[CONFIG_DIR]/build/telosb/main.exe</firmware>
       <moteinterface>org.contikios.cooja.interfaces.Position</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.RimeAddress</moteinterface>
       <moteinterface>org.contikios.cooja.interfaces.IPAddress</moteinterface>
