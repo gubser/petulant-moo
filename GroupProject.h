@@ -4,6 +4,8 @@
 
 #define IS_RELAY(id) (id == 15 || id == 33 || id == 28)
 
+#define BULK_SIZE 12
+
 enum {
   MODE_INIT = 0,
   MODE_LISTEN_ON,
@@ -16,6 +18,7 @@ enum {
 
 typedef nx_struct _schedule_t {
   nx_uint8_t device_id;
+  nx_uint8_t sendto;
   nx_uint16_t period;          // period in ms
   nx_uint16_t slotsize;        // 
   nx_uint8_t listen;
@@ -31,6 +34,12 @@ typedef nx_struct group_project_msg {
   nx_uint8_t seq_no;
   nx_uint16_t data;
 } group_project_msg_t;
+
+typedef nx_struct group_bulk_msg {
+  nx_am_addr_t source;
+  nx_uint8_t seq_no;
+  nx_uint16_t data[BULK_SIZE];
+} group_bulk_msg_t;
 
 typedef nx_struct timesync_msg {
   nx_uint16_t tag;

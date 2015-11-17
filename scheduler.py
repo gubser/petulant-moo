@@ -3,6 +3,8 @@ class M:
         self.moteid = moteid
         self.children = children or []
         
+        self.parent = None
+        
         self.listen = None
         self.listen_ack = None
         self.send = None
@@ -10,8 +12,16 @@ class M:
         
     def add_child(self, child):
         self.children.append(child)
+        
+    def parentize(self):
+        self.parent = self
+        for mote in self.children:
+            mote.parent = self
+            mote.parentize()
     
     def calculate(self, offset):
+        self.parentize()
+        
         for mote in self.children:
             offset = mote.calculate(offset)
         
@@ -57,6 +67,7 @@ class M:
     def generate(self, period, slotsize):
         params = {
             'device_id': self.moteid,
+            'sendto': self.parent.moteid,
             'period': period,
             'slotsize': slotsize,
             'listen': self.listen or 0,
@@ -67,7 +78,7 @@ class M:
         
         #return "{{ .device_id = {device_id:>3}, .period = {period:>5}, .slotsize = {slotsize:>3}, .listen = {listen:>3}, .listen_ack = {listen_ack:>3}, .send = {send:>3}, .send_ack = {send_ack:>3} }},".format(**params)
         #return "    case {device_id}: return (schedule_t){{ .device_id = {device_id:>3}, .period = {period:>5}, .slotsize = {slotsize:>3}, .listen = {listen:>3}, .listen_ack = {listen_ack:>3}, .send = {send:>3}, .send_ack = {send_ack:>3} }},".format(**params)
-        return "      case {device_id}: {{ mySchedule.device_id = {device_id:>3}; mySchedule.period = {period:>5}; mySchedule.slotsize = {slotsize:>3}; mySchedule.listen = {listen:>3}; mySchedule.listen_ack = {listen_ack:>3}; mySchedule.send = {send:>3}; mySchedule.send_ack = {send_ack:>3}; }} break;".format(**params)
+        return "      case {device_id}: {{ mySchedule.device_id = {device_id:>3}; mySchedule.sendto = {sendto:>3}; mySchedule.period = {period:>5}; mySchedule.slotsize = {slotsize:>3}; mySchedule.listen = {listen:>3}; mySchedule.listen_ack = {listen_ack:>3}; mySchedule.send = {send:>3}; mySchedule.send_ack = {send_ack:>3}; }} break;".format(**params)
     
     def generate_all(self, period, slotsize):
         lines = []

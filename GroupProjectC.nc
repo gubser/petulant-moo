@@ -65,9 +65,13 @@ implementation {
 
   bool locked;
   bool radioOn;
+  uint8_t nextState;
   uint8_t currentState;
   
   uint8_t seq_no = 0;
+  
+  group_bulk_msg_t bulk_current;
+  int bulk_index = 0;
   
   /*
    * Time Synchronization
@@ -93,20 +97,20 @@ implementation {
   
   void get_schedule() {
     switch(TOS_NODE_ID) {
-      case 6: { mySchedule.device_id =   6; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   0; mySchedule.send_ack =   4; } break;
-      case 16: { mySchedule.device_id =  16; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   1; mySchedule.send_ack =   4; } break;
-      case 22: { mySchedule.device_id =  22; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   2; mySchedule.send_ack =   4; } break;
-      case 18: { mySchedule.device_id =  18; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   3; mySchedule.send_ack =   4; } break;
-      case 28: { mySchedule.device_id =  28; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   4; mySchedule.send =   5; mySchedule.send_ack =   9; } break;
-      case 3: { mySchedule.device_id =   3; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   6; mySchedule.send_ack =   9; } break;
-      case 32: { mySchedule.device_id =  32; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   7; mySchedule.send_ack =   9; } break;
-      case 31: { mySchedule.device_id =  31; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   8; mySchedule.send_ack =   9; } break;
-      case 33: { mySchedule.device_id =  33; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   5; mySchedule.listen_ack =   9; mySchedule.send =  10; mySchedule.send_ack =  15; } break;
-      case 2: { mySchedule.device_id =   2; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  11; mySchedule.send_ack =  15; } break;
-      case 4: { mySchedule.device_id =   4; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  12; mySchedule.send_ack =  15; } break;
-      case 8: { mySchedule.device_id =   8; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  13; mySchedule.send_ack =  15; } break;
-      case 15: { mySchedule.device_id =  15; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  14; mySchedule.send_ack =  15; } break;
-      case 1: { mySchedule.device_id =   1; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =  10; mySchedule.listen_ack =  15; mySchedule.send =   0; mySchedule.send_ack =   0; } break;
+      case 6: { mySchedule.device_id =   6; mySchedule.sendto =   6; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   0; mySchedule.send_ack =   4; } break;
+      case 16: { mySchedule.device_id =  16; mySchedule.sendto =  16; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   1; mySchedule.send_ack =   4; } break;
+      case 22: { mySchedule.device_id =  22; mySchedule.sendto =  22; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   2; mySchedule.send_ack =   4; } break;
+      case 18: { mySchedule.device_id =  18; mySchedule.sendto =  18; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   3; mySchedule.send_ack =   4; } break;
+      case 28: { mySchedule.device_id =  28; mySchedule.sendto =  28; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   4; mySchedule.send =   5; mySchedule.send_ack =   9; } break;
+      case 3: { mySchedule.device_id =   3; mySchedule.sendto =   3; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   6; mySchedule.send_ack =   9; } break;
+      case 32: { mySchedule.device_id =  32; mySchedule.sendto =  32; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   7; mySchedule.send_ack =   9; } break;
+      case 31: { mySchedule.device_id =  31; mySchedule.sendto =  31; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   8; mySchedule.send_ack =   9; } break;
+      case 33: { mySchedule.device_id =  33; mySchedule.sendto =  33; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   5; mySchedule.listen_ack =   9; mySchedule.send =  10; mySchedule.send_ack =  15; } break;
+      case 2: { mySchedule.device_id =   2; mySchedule.sendto =   2; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  11; mySchedule.send_ack =  15; } break;
+      case 4: { mySchedule.device_id =   4; mySchedule.sendto =   4; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  12; mySchedule.send_ack =  15; } break;
+      case 8: { mySchedule.device_id =   8; mySchedule.sendto =   8; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  13; mySchedule.send_ack =  15; } break;
+      case 15: { mySchedule.device_id =  15; mySchedule.sendto =  15; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  14; mySchedule.send_ack =  15; } break;
+      case 1: { mySchedule.device_id =   1; mySchedule.sendto =   1; mySchedule.period =  1000; mySchedule.slotsize =  10; mySchedule.listen =  10; mySchedule.listen_ack =  15; mySchedule.send =   0; mySchedule.send_ack =   0; } break;
     }
   }
   
@@ -139,25 +143,58 @@ implementation {
   event void RadioControl.stopDone(error_t err) {
     // do nothing
   }
-      
-  event void MilliTimer.fired() {
+  
+  void sendPacket() {
     error_t ret;
+    
+    if(call Queue.empty()) {
+      dbg("GroupProjectC", "sendPacket: no packets to send.");
+      return;
+    }
+    
+    if(currentState != MODE_SEND_ON) {
+      dbg("GroupProjectC", "sendPacket: wrong state %d", currentState);
+      return;
+    }
     
     // sink node prints out data on serial port
     if (TOS_NODE_ID == SINK_ADDRESS) {
-      ret = call SerialSend.send(AM_BROADCAST_ADDR, call Queue.head(), sizeof(group_project_msg_t));
+      ret = call SerialSend.send(AM_BROADCAST_ADDR, call Queue.head(), sizeof(group_bulk_msg_t));
     }
     // other nodes forward data over radio
     else {
-      ret = call RadioSend.send(AM_BROADCAST_ADDR, call Queue.head(), sizeof(group_project_msg_t));
+      ret = call RadioSend.send(mySchedule.sendto, call Queue.head(), sizeof(group_bulk_msg_t));
     }
     if (ret != SUCCESS) {
-      startForwardTimer(); // retry in a short while
+      dbg("GroupProjectC", "sendPacket: fail to send");
+      call MilliTimer.startOneShot(1);
+    }
+  }
+  
+  event void MilliTimer.fired() {
+    sendPacket();
+  }
+  
+  event void RadioSend.sendDone(message_t* bufPtr, error_t error) {
+    if (call Queue.head() == bufPtr) {
+      locked = FALSE;
+      
+      // remove from queue
+      call Queue.dequeue();
+      
+      // return buffer
+      call Pool.put(bufPtr);
+      
+      // send next waiting message
+      if (!locked) {
+        locked = TRUE;
+        sendPacket();
+      }
     }
   }
 
   event message_t* RadioReceive.receive(message_t* bufPtr, void* payload, uint8_t len) {
-    if(len == sizeof(group_project_msg_t)) {
+    if(len == sizeof(group_bulk_msg_t)) {
       return forward(bufPtr);
     }
     dbg("RadioReceive", "Received unknown packet in RadioReceive\n");
@@ -240,8 +277,8 @@ implementation {
   uint32_t slotScheduler() {
     uint32_t dt = 0;
 
-    uint8_t nextState;
-
+    currentState = nextState;
+    
     switch (currentState) {
         case MODE_INIT: {
           dbg("GroupProjectC", "MODE_INIT\n");
@@ -286,6 +323,8 @@ implementation {
           dbg("GroupProjectC", "MODE_SEND_ON\n");
           call Leds.led2On();    
           call RadioControl.start();
+          
+          call MilliTimer.startOneShot(5);
           nextState = MODE_SEND_ACK;
           dt = mySchedule.send_ack - (1 + mySchedule.send);
           break;
@@ -302,7 +341,7 @@ implementation {
           dbg("GroupProjectC", "MODE_SEND_OFF\n");
           call Leds.led2Off();    
           call RadioControl.stop();
-          nextState = MODE_LISTEN_ON;
+          nextState = MODE_INIT;
           dt = mySchedule.period - (1 + mySchedule.send_ack);
           break;
         }
@@ -310,7 +349,6 @@ implementation {
       
 
       dbg("GroupProjectC", "%lu \n", dt);
-      currentState = nextState;
       dt = dt * mySchedule.slotsize;
 
       return dt;      
@@ -331,12 +369,14 @@ implementation {
 
   event void TimeSyncLaunch.fired() {
     uint8_t dt;
-
-    currentState = MODE_INIT;
-
-    dt = slotScheduler();
-    call TimeSyncSlots.startOneShot(dt);
-
+    
+    if(TOS_NODE_ID == SINK_ADDRESS) {
+      // sink node always on, no scheduling because no energy optimization
+    } else {
+      nextState = MODE_INIT;
+      dt = slotScheduler();
+      call TimeSyncSlots.startOneShot(dt);
+    }
     dbg("GroupProjectC", "TimeSyncLaunch called\n");
   }
 
@@ -345,27 +385,38 @@ implementation {
   
   
   event void Notify.notify(group_project_msg_t datamsg) {
-    /*message_t * m;
-    group_project_msg_t* gpm;
-    
-    call Leds.led0Toggle();
-    if (!radioOn) {
-      dbg("GroupProjectC", "Notify: Radio not ready.\n");
-      return; // radio not ready yet
-    } 
-    m = call Pool.get();
-    if (m == NULL) {
-      dbg("GroupProjectC", "Notify: No more message buffers.\n");
-      return;
+    if(bulk_index == 0) {
+      bulk_current.source = datamsg.source;
+      bulk_current.seq_no = datamsg.seq_no;
     }
-    gpm = (group_project_msg_t*)call RadioPacket.getPayload(m, sizeof(group_project_msg_t));
-    *gpm = datamsg;
-    // enqueue packet
-    enqueue(m);*/
-  }
-  
-  event void RadioSend.sendDone(message_t* bufPtr, error_t error) {
-    senddone(bufPtr, error);
+    
+    bulk_current.data[bulk_index] = datamsg.data;
+    
+    if(bulk_index == BULK_SIZE-1) {
+      message_t * m;
+      group_bulk_msg_t* gbm;
+      
+      call Leds.led0Toggle();
+      if (!radioOn) {
+        dbg("GroupProjectC", "Notify: Radio not ready.\n");
+        return; // radio not ready yet
+      }
+      m = call Pool.get();
+      if (m == NULL) {
+        dbg("GroupProjectC", "Notify: No more message buffers.\n");
+        return;
+      }
+      gbm = (group_bulk_msg_t*)call RadioPacket.getPayload(m, sizeof(group_bulk_msg_t));
+      *gbm = bulk_current;
+      
+      // enqueue packet
+      enqueue(m);
+      
+      // reset bulk buffer
+      bulk_index = 0;
+    } else {
+      bulk_index++;
+    }
   }
   
   event void RadioTimeSyncSend.sendDone(message_t* bufPtr, error_t error) {
@@ -373,7 +424,7 @@ implementation {
   }
   
   event void SerialSend.sendDone(message_t* bufPtr, error_t error) {
-    senddone(bufPtr, error);
+    //senddone(bufPtr, error);
   }
   
   error_t enqueue(message_t * m) {
@@ -388,12 +439,6 @@ implementation {
     // update cache
     message_to_cache_entry(m, &c);
     call Cache.insert(c);
-    
-    // if not sending, send first packet from queue
-    if (!locked) {
-      locked = TRUE;
-      startForwardTimer();
-    }
     
     dbg("GroupProjectC", "enqueued (%u,%u) p:%u q:%u\n", c.source, c.seq_no, call Pool.size(), call Queue.size());
     return SUCCESS;
@@ -423,33 +468,10 @@ implementation {
   }
   
   void message_to_cache_entry(message_t *m, cache_entry_t * c) {
-    group_project_msg_t* gpm;
-    gpm = (group_project_msg_t*)call RadioPacket.getPayload(m, sizeof(group_project_msg_t));
+    group_bulk_msg_t* gpm;
+    gpm = (group_bulk_msg_t*)call RadioPacket.getPayload(m, sizeof(group_bulk_msg_t));
     c->source = gpm->source;
     c->seq_no = gpm->seq_no;
-  }
-  
-  void senddone(message_t* bufPtr, error_t error) {
-    if (call Queue.head() == bufPtr) {
-      locked = FALSE;
-      
-      // remove from queue
-      call Queue.dequeue();
-      
-      // return buffer
-      call Pool.put(bufPtr);
-      
-      // send next waiting message
-      if (!call Queue.empty() && !locked) {
-        locked = TRUE;
-        startForwardTimer();
-      }
-    }
-  }
-  
-  void startForwardTimer() {
-    uint16_t delay = call Random.rand16();
-    call MilliTimer.startOneShot(1 + delay % (FORWARD_DELAY_MS - 1));
   }
 
 }
