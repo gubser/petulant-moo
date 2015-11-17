@@ -250,7 +250,7 @@ implementation {
             dt = mySchedule.send;
           } 
           else {
-            currentState = MODE_LISTEN_ON;
+            nextState = MODE_LISTEN_ON;
             dt = mySchedule.listen;
           }          
           break;
@@ -335,6 +335,7 @@ implementation {
     dt = slotScheduler();
     call TimeSyncSlots.startOneShot(dt);
 
+    dbg("GroupProjectC", "TimeSyncLaunch called\n");
   }
 
 
