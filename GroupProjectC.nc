@@ -89,7 +89,8 @@ implementation {
   
   enum {
     FORWARD_DELAY_MS = 3, // max wait time between two forwarded packets
-    TIMESYNC_DELAY_MS = 3, // delay multiplied by id for TDMA-like flooding
+    TIMESYNC_DELAY_MS = 5, // delay multiplied by id for TDMA-like flooding
+    TIMESYNC_DELAY_WAIT = 200
   };
 
   schedule_t mySchedule;
@@ -112,16 +113,16 @@ implementation {
       case  6: { mySchedule.device_id =   6; mySchedule.sendto =  28; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   1; mySchedule.send_done =   2; mySchedule.send_ack =   4; } break;
       case 16: { mySchedule.device_id =  16; mySchedule.sendto =  28; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   2; mySchedule.send_done =   3; mySchedule.send_ack =   4; } break;
       case 22: { mySchedule.device_id =  22; mySchedule.sendto =  28; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   3; mySchedule.send_done =   4; mySchedule.send_ack =   4; } break;
-      case 28: { mySchedule.device_id =  28; mySchedule.sendto =  33; mySchedule.listen =   1; mySchedule.listen_ack =   4; mySchedule.send =   5; mySchedule.send_done =   9; mySchedule.send_ack =  12; } break;
-      case  3: { mySchedule.device_id =   3; mySchedule.sendto =  33; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   9; mySchedule.send_done =  10; mySchedule.send_ack =  12; } break;
-      case 32: { mySchedule.device_id =  32; mySchedule.sendto =  33; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  10; mySchedule.send_done =  11; mySchedule.send_ack =  12; } break;
-      case 31: { mySchedule.device_id =  31; mySchedule.sendto =  33; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  11; mySchedule.send_done =  12; mySchedule.send_ack =  12; } break;
-      case 33: { mySchedule.device_id =  33; mySchedule.sendto =   1; mySchedule.listen =   5; mySchedule.listen_ack =  12; mySchedule.send =  13; mySchedule.send_done =  21; mySchedule.send_ack =  25; } break;
-      case  2: { mySchedule.device_id =   2; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  21; mySchedule.send_done =  22; mySchedule.send_ack =  25; } break;
-      case  4: { mySchedule.device_id =   4; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  22; mySchedule.send_done =  23; mySchedule.send_ack =  25; } break;
-      case  8: { mySchedule.device_id =   8; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  23; mySchedule.send_done =  24; mySchedule.send_ack =  25; } break;
-      case 15: { mySchedule.device_id =  15; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  24; mySchedule.send_done =  25; mySchedule.send_ack =  25; } break;
-      case  1: { mySchedule.device_id =   1; mySchedule.sendto =   1; mySchedule.listen =  13; mySchedule.listen_ack =  25; mySchedule.send =   0; mySchedule.send_done =   0; mySchedule.send_ack =   0; } break;
+      case 28: { mySchedule.device_id =  28; mySchedule.sendto =  33; mySchedule.listen =   1; mySchedule.listen_ack =   4; mySchedule.send =   5; mySchedule.send_done =   9; mySchedule.send_ack =  10; } break;
+      case  3: { mySchedule.device_id =   3; mySchedule.sendto =  33; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   9; mySchedule.send_done =  10; mySchedule.send_ack =  10; } break;
+      case 33: { mySchedule.device_id =  33; mySchedule.sendto =   1; mySchedule.listen =   5; mySchedule.listen_ack =  10; mySchedule.send =  14; mySchedule.send_done =  20; mySchedule.send_ack =  26; } break;
+      case  2: { mySchedule.device_id =   2; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  20; mySchedule.send_done =  21; mySchedule.send_ack =  26; } break;
+      case  4: { mySchedule.device_id =   4; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  21; mySchedule.send_done =  22; mySchedule.send_ack =  26; } break;
+      case  8: { mySchedule.device_id =   8; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  22; mySchedule.send_done =  23; mySchedule.send_ack =  26; } break;
+      case 31: { mySchedule.device_id =  31; mySchedule.sendto =  15; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  11; mySchedule.send_done =  12; mySchedule.send_ack =  13; } break;
+      case 32: { mySchedule.device_id =  32; mySchedule.sendto =  15; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  12; mySchedule.send_done =  13; mySchedule.send_ack =  13; } break;
+      case 15: { mySchedule.device_id =  15; mySchedule.sendto =   1; mySchedule.listen =  11; mySchedule.listen_ack =  13; mySchedule.send =  23; mySchedule.send_done =  26; mySchedule.send_ack =  26; } break;
+      case  1: { mySchedule.device_id =   1; mySchedule.sendto =   1; mySchedule.listen =  14; mySchedule.listen_ack =  26; mySchedule.send =   0; mySchedule.send_done =   0; mySchedule.send_ack =   0; } break;
     }
   }
   
@@ -231,7 +232,7 @@ implementation {
         dbg("RadioTimeSyncReceive", "sync time: %lu, local time: %lu\n", sync_recvTime, tnow);
         
         //if(IS_RELAY(TOS_NODE_ID)) {
-          call TimeSyncTimer.startOneShot(TIMESYNC_DELAY_MS*TOS_NODE_ID);
+          call TimeSyncTimer.startOneShot(TIMESYNC_DELAY_WAIT + TIMESYNC_DELAY_MS*TOS_NODE_ID);
           
           if(TIMESYNC_DELAY_MS*TOS_NODE_ID > sync_remaining) {
             dbg("RadioTimeSyncReceive", "Timing violation\n");
