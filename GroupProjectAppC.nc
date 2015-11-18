@@ -22,7 +22,7 @@ implementation {
   components CC2420TimeSyncMessageC as Radio;
   components new AMSenderC(AM_GROUP_PROJECT_MSG);
   components new AMReceiverC(AM_GROUP_PROJECT_MSG);
-  components new TimerMilliC();
+  components new TimerMilliC() as TimerSend;
   components new TimerMilliC() as TimeSyncTimerC;
   components new TimerMilliC() as TimeSyncLaunchC;
   components new TimerMilliC() as TimeSyncSlotsC;
@@ -63,7 +63,7 @@ implementation {
 
   App.SerialSend -> SerialAMSenderC;
   App.Leds -> LedsC;
-  App.MilliTimer -> TimerMilliC;
+  App.TimerSend -> TimerSendC;
   App.LocalTime -> LocalTimeMilliC;
   App.TimeSyncTimer -> TimeSyncTimerC;
   App.TimeSyncLaunch -> TimeSyncLaunchC;

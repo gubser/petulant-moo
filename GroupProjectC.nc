@@ -33,7 +33,7 @@ module GroupProjectC @safe() {
     interface TimeSyncAMSend<TMilli, uint32_t> as RadioTimeSyncSend;
     
     // Timer
-    interface Timer<TMilli> as MilliTimer;
+    interface Timer<TMilli> as TimerSend;
     interface Timer<TMilli> as TimeSyncTimer;
     interface Timer<TMilli> as TimeSyncLaunch;
     interface Timer<TMilli> as TimeSyncSlots;
@@ -175,11 +175,11 @@ implementation {
     }
     if (ret != SUCCESS) {
       dbg("GroupProjectC", "sendPacket: fail to send");
-      call MilliTimer.startOneShot(1);
+      call TimerSend.startOneShot(1);
     }
   }
   
-  event void MilliTimer.fired() {
+  event void TimerSend.fired() {
     sendPacket();
   }
   
@@ -330,7 +330,7 @@ implementation {
           call Leds.led2On();
           call RadioControl.start();
           
-          call MilliTimer.startOneShot(5);
+          call TimerSend.startOneShot(5);
           nextState = MODE_SEND_DONE;
           dt = mySchedule.send_done - mySchedule.send;
           break;
