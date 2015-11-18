@@ -2,8 +2,6 @@
 #define GROUP_PROJECT_H
 #include <AM.h>
 
-#define IS_RELAY(id) (id == 15 || id == 33 || id == 28)
-
 #define BULK_SIZE 12
 
 enum {

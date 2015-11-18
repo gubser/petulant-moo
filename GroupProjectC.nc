@@ -63,7 +63,6 @@ implementation {
 #warning debug printf not enabled
 #endif
 
-  bool locked;
   bool radioOn;
   uint8_t nextState;
   uint8_t currentState;
@@ -95,24 +94,34 @@ implementation {
 
   schedule_t mySchedule;
   
-  uint16_t schedule_period = 50;
-  uint16_t schedule_slotsize = 20;
+  uint16_t schedule_period;
+  uint16_t schedule_slotsize;
   
   void get_schedule() {
+    if(datarate < 5) {              // optimized for datarate == 1
+        schedule_period = 1200;
+        schedule_slotsize = 20;
+    } else if(datarate < 20) {      // datarate == 10
+        schedule_period = 120;
+        schedule_slotsize = 20;
+    } else {                        // datarate == 50
+        schedule_period = 26;
+        schedule_slotsize = 20;
+    }
     switch(TOS_NODE_ID) {
       case  6: { mySchedule.device_id =   6; mySchedule.sendto =  28; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   1; mySchedule.send_done =   2; mySchedule.send_ack =   4; } break;
       case 16: { mySchedule.device_id =  16; mySchedule.sendto =  28; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   2; mySchedule.send_done =   3; mySchedule.send_ack =   4; } break;
       case 22: { mySchedule.device_id =  22; mySchedule.sendto =  28; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   3; mySchedule.send_done =   4; mySchedule.send_ack =   4; } break;
-      case 28: { mySchedule.device_id =  28; mySchedule.sendto =  33; mySchedule.listen =   1; mySchedule.listen_ack =   4; mySchedule.send =   5; mySchedule.send_done =   6; mySchedule.send_ack =   9; } break;
-      case  3: { mySchedule.device_id =   3; mySchedule.sendto =  33; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   6; mySchedule.send_done =   7; mySchedule.send_ack =   9; } break;
-      case 32: { mySchedule.device_id =  32; mySchedule.sendto =  33; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   7; mySchedule.send_done =   8; mySchedule.send_ack =   9; } break;
-      case 31: { mySchedule.device_id =  31; mySchedule.sendto =  33; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   8; mySchedule.send_done =   9; mySchedule.send_ack =   9; } break;
-      case 33: { mySchedule.device_id =  33; mySchedule.sendto =   1; mySchedule.listen =   5; mySchedule.listen_ack =   9; mySchedule.send =  10; mySchedule.send_done =  11; mySchedule.send_ack =  15; } break;
-      case  2: { mySchedule.device_id =   2; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  11; mySchedule.send_done =  12; mySchedule.send_ack =  15; } break;
-      case  4: { mySchedule.device_id =   4; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  12; mySchedule.send_done =  13; mySchedule.send_ack =  15; } break;
-      case  8: { mySchedule.device_id =   8; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  13; mySchedule.send_done =  14; mySchedule.send_ack =  15; } break;
-      case 15: { mySchedule.device_id =  15; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  14; mySchedule.send_done =  15; mySchedule.send_ack =  15; } break;
-      case  1: { mySchedule.device_id =   1; mySchedule.sendto =   1; mySchedule.listen =  10; mySchedule.listen_ack =  15; mySchedule.send =   0; mySchedule.send_done =   0; mySchedule.send_ack =   0; } break;
+      case 28: { mySchedule.device_id =  28; mySchedule.sendto =  33; mySchedule.listen =   1; mySchedule.listen_ack =   4; mySchedule.send =   5; mySchedule.send_done =   9; mySchedule.send_ack =  12; } break;
+      case  3: { mySchedule.device_id =   3; mySchedule.sendto =  33; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   9; mySchedule.send_done =  10; mySchedule.send_ack =  12; } break;
+      case 32: { mySchedule.device_id =  32; mySchedule.sendto =  33; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  10; mySchedule.send_done =  11; mySchedule.send_ack =  12; } break;
+      case 31: { mySchedule.device_id =  31; mySchedule.sendto =  33; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  11; mySchedule.send_done =  12; mySchedule.send_ack =  12; } break;
+      case 33: { mySchedule.device_id =  33; mySchedule.sendto =   1; mySchedule.listen =   5; mySchedule.listen_ack =  12; mySchedule.send =  13; mySchedule.send_done =  21; mySchedule.send_ack =  25; } break;
+      case  2: { mySchedule.device_id =   2; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  21; mySchedule.send_done =  22; mySchedule.send_ack =  25; } break;
+      case  4: { mySchedule.device_id =   4; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  22; mySchedule.send_done =  23; mySchedule.send_ack =  25; } break;
+      case  8: { mySchedule.device_id =   8; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  23; mySchedule.send_done =  24; mySchedule.send_ack =  25; } break;
+      case 15: { mySchedule.device_id =  15; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  24; mySchedule.send_done =  25; mySchedule.send_ack =  25; } break;
+      case  1: { mySchedule.device_id =   1; mySchedule.sendto =   1; mySchedule.listen =  13; mySchedule.listen_ack =  25; mySchedule.send =   0; mySchedule.send_done =   0; mySchedule.send_ack =   0; } break;
     }
   }
   
@@ -175,8 +184,6 @@ implementation {
   
   event void RadioSend.sendDone(message_t* bufPtr, error_t error) {
     if (call Queue.head() == bufPtr) {
-      locked = FALSE;
-      
       // remove from queue
       call Queue.dequeue();
       
@@ -184,10 +191,7 @@ implementation {
       call Pool.put(bufPtr);
       
       // send next waiting message
-      if (!locked) {
-        locked = TRUE;
-        sendPacket();
-      }
+      sendPacket();
     }
   }
 
@@ -332,7 +336,7 @@ implementation {
         }
         
         case MODE_SEND_DONE: {
-          dbg("GroupProjectC", "MODE_SEND_ACK\n");
+          dbg("GroupProjectC", "MODE_SEND_DONE\n");
           nextState = MODE_SEND_ACK;
           call Leds.led2Off();
           dt = mySchedule.send_ack - mySchedule.send_done;

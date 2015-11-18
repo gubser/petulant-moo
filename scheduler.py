@@ -10,6 +10,9 @@ class M:
         self.send = None
         self.send_done = None
         self.send_ack = None
+    
+    def num_total_children(self):
+        return sum([mote.num_total_children()+1 for mote in self.children])
         
     def add_child(self, child):
         self.children.append(child)
@@ -27,13 +30,21 @@ class M:
         
         if len(self.children) > 0:
             self.listen = offset
-            self.listen_ack = offset + len(self.children)
-        
+            
+            # find out how many send slots are needed based on how many children they have.
             for idx, mote in enumerate(self.children):
-                mote.send = offset + idx
-                mote.send_done = mote.send + 1
+                mote.send = offset
+                
+                slots_needed = 1 + mote.num_total_children()
+                mote.send_done = mote.send + slots_needed
+                
+                offset += slots_needed
+            
+            # after send times have been determined, set a common ack time
+            self.listen_ack = offset
+            for mote in self.children:
                 mote.send_ack = self.listen_ack
-        
+            
             return self.listen_ack+1
         
         return offset
@@ -49,7 +60,7 @@ class M:
                 s += "L"
             elif self.listen_ack is not None and i == self.listen_ack:
                 s += "l"
-            elif self.send is not None and i == self.send:
+            elif self.send is not None and i >= self.send and i < self.send_done:
                 s += "S"
             elif self.send_ack is not None and i == self.send_ack:
                 s += "s"
@@ -94,6 +105,10 @@ mote28 = M(28, [M(6), M(16), M(22)])
 mote33 = M(33, [mote28, M(3), M(32), M(31)])
 
 sink = M(1, [mote33, M(2), M(4), M(8), M(15)])
+
+print("mote28", mote28.num_total_children())
+print("mote33", mote33.num_total_children())
+print("sink", sink.num_total_children())
 
 sink.parentize()
 length = sink.calculate(1)
