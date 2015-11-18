@@ -378,7 +378,7 @@ implementation {
 
 
   event void TimeSyncLaunch.fired() {
-    uint8_t dt;
+    uint32_t dt;
     
     if(TOS_NODE_ID == SINK_ADDRESS) {
       // sink node always on, no scheduling because no energy optimization
