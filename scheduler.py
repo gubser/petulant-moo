@@ -8,6 +8,7 @@ class M:
         self.listen = None
         self.listen_ack = None
         self.send = None
+        self.send_done = None
         self.send_ack = None
         
     def add_child(self, child):
@@ -30,6 +31,7 @@ class M:
         
             for idx, mote in enumerate(self.children):
                 mote.send = offset + idx
+                mote.send_done = mote.send + 1
                 mote.send_ack = self.listen_ack
         
             return self.listen_ack+1
@@ -70,12 +72,13 @@ class M:
             'listen': self.listen or 0,
             'listen_ack': self.listen_ack or 0,
             'send': self.send or 0,
-            'send_ack': self.send_ack or 0
+            'send_ack': self.send_ack or 0,
+            'send_done': self.send_done or 0
         }
         
         #return "{{ .device_id = {device_id:>3}, .period = {period:>5}, .slotsize = {slotsize:>3}, .listen = {listen:>3}, .listen_ack = {listen_ack:>3}, .send = {send:>3}, .send_ack = {send_ack:>3} }},".format(**params)
         #return "    case {device_id}: return (schedule_t){{ .device_id = {device_id:>3}, .period = {period:>5}, .slotsize = {slotsize:>3}, .listen = {listen:>3}, .listen_ack = {listen_ack:>3}, .send = {send:>3}, .send_ack = {send_ack:>3} }},".format(**params)
-        return "      case {device_id:>2}: {{ mySchedule.device_id = {device_id:>3}; mySchedule.sendto = {sendto:>3}; mySchedule.listen = {listen:>3}; mySchedule.listen_ack = {listen_ack:>3}; mySchedule.send = {send:>3}; mySchedule.send_ack = {send_ack:>3}; }} break;".format(**params)
+        return "      case {device_id:>2}: {{ mySchedule.device_id = {device_id:>3}; mySchedule.sendto = {sendto:>3}; mySchedule.listen = {listen:>3}; mySchedule.listen_ack = {listen_ack:>3}; mySchedule.send = {send:>3}; mySchedule.send_done = {send_done:>3}; mySchedule.send_ack = {send_ack:>3}; }} break;".format(**params)
     
     def generate_all(self):
         lines = []
@@ -93,7 +96,7 @@ mote33 = M(33, [mote28, M(3), M(32), M(31)])
 sink = M(1, [mote33, M(2), M(4), M(8), M(15)])
 
 sink.parentize()
-length = sink.calculate(0)
+length = sink.calculate(1)
 print('\n'.join(sink.dump_all(length)))
 print('\n'.join(sink.generate_all()))
 

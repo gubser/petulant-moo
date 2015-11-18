@@ -12,6 +12,7 @@ enum {
   MODE_LISTEN_ACK,
   MODE_LISTEN_OFF,
   MODE_SEND_ON,
+  MODE_SEND_DONE,
   MODE_SEND_ACK,
   MODE_SEND_OFF
 };
@@ -22,6 +23,7 @@ typedef nx_struct _schedule_t {
   nx_uint8_t listen;
   nx_uint8_t listen_ack;
   nx_uint8_t send;
+  nx_uint8_t send_done;
   nx_uint8_t send_ack;
 } schedule_t;
 
