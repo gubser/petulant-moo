@@ -34,6 +34,7 @@ module GroupProjectC @safe() {
     
     // Timer
     interface Timer<TMilli> as TimerSend;
+    interface Timer<TMilli> as TimerSerial;
     interface Timer<TMilli> as TimeSyncTimer;
     interface Timer<TMilli> as TimeSyncLaunch;
     interface Timer<TMilli> as TimeSyncSlots;
@@ -52,7 +53,7 @@ module GroupProjectC @safe() {
 }
 implementation {
 
-//#undef debug_printf
+#undef debug_printf
 #ifdef debug_printf
 #warning debug printf enabled
 #undef dbg
@@ -72,6 +73,12 @@ implementation {
   group_bulk_msg_t bulk_current;
   int bulk_index = 0;
   
+  group_bulk_msg_t serial_bulk;
+  int serial_next = BULK_SIZE;
+  message_t serial_packet;
+  bool serial_sent = TRUE;
+  bool serial_sending = FALSE;
+  
   /*
    * Time Synchronization
    */
@@ -86,6 +93,8 @@ implementation {
   void message_to_cache_entry(message_t *m, cache_entry_t * c);
   void senddone(message_t* bufPtr, error_t error);
   void startForwardTimer();
+  void serialSendPacket();
+  bool serialDissectBulk();
   
   enum {
     FORWARD_DELAY_MS = 3, // max wait time between two forwarded packets
@@ -132,6 +141,9 @@ implementation {
     call ClockCalibControl.start();
 #endif
     get_schedule();
+    if(TOS_NODE_ID == SINK_ADDRESS) {
+      serialSendPacket();
+    }
   }
   
   event void RadioControl.startDone(error_t err) {
@@ -156,25 +168,20 @@ implementation {
     error_t ret;
     
     if(call Queue.empty()) {
-      dbg("GroupProjectC", "sendPacket: no packets to send.");
+      dbg("GroupProjectC", "sendPacket: no packets to send.\n");
       return;
     }
     
     if(currentState != MODE_SEND_ON) {
-      dbg("GroupProjectC", "sendPacket: wrong state %d", currentState);
+      dbg("GroupProjectC", "sendPacket: wrong state %d\n", currentState);
       return;
     }
     
     // sink node prints out data on serial port
-    if (TOS_NODE_ID == SINK_ADDRESS) {
-      ret = call SerialSend.send(AM_BROADCAST_ADDR, call Queue.head(), sizeof(group_bulk_msg_t));
-    }
     // other nodes forward data over radio
-    else {
-      ret = call RadioSend.send(mySchedule.sendto, call Queue.head(), sizeof(group_bulk_msg_t));
-    }
+    ret = call RadioSend.send(mySchedule.sendto, call Queue.head(), sizeof(group_bulk_msg_t));
     if (ret != SUCCESS) {
-      dbg("GroupProjectC", "sendPacket: fail to send");
+      dbg("GroupProjectC", "sendPacket: fail to send\n");
       call TimerSend.startOneShot(1);
     }
   }
@@ -202,6 +209,83 @@ implementation {
     }
     dbg("RadioReceive", "Received unknown packet in RadioReceive\n");
     return bufPtr;
+  }
+  
+  void serialSendPacket() {
+    error_t ret;
+    serial_sending = TRUE;
+    
+    if(TOS_NODE_ID != SINK_ADDRESS) {
+      dbg("GroupProjectC", "sendSerialPacket: source code bug, only sink should call this.\n");
+      return;
+    }
+    
+    if(serialDissectBulk() == FALSE) {
+      // nothing to do
+      serial_sending = FALSE;
+      return;
+    }
+    
+    // sink node prints out data on serial port
+    ret = call SerialSend.send(AM_BROADCAST_ADDR, &serial_packet, sizeof(group_project_msg_t));
+    if (ret != SUCCESS) {
+      dbg("GroupProjectC", "sendSerialPacket: fail to send\n");
+      call TimerSerial.startOneShot(1);
+    }
+  }
+  
+  bool serialDissectBulk() {
+    message_t *m;
+    group_project_msg_t *gpm;
+    
+    if(serial_sent == FALSE) {
+      // our current packet hasn't been sent yet.
+      return TRUE;
+    }
+    
+    if(serial_next == BULK_SIZE) {
+      // get a new bulk message
+      if(call Queue.empty()) {
+        return FALSE;
+      }
+      
+      m = call Queue.head();
+      // copy payload
+      serial_bulk = *((group_bulk_msg_t*)call RadioPacket.getPayload(m, sizeof(group_bulk_msg_t)));
+      serial_next = 0;
+      
+      // remove from queue
+      call Queue.dequeue();
+      call Pool.put(m);
+    }
+    
+    gpm = (group_project_msg_t*)call RadioPacket.getPayload(&serial_packet, sizeof(group_project_msg_t));
+    
+    gpm->source = serial_bulk.source;
+    gpm->seq_no = serial_bulk.seq_no;
+    gpm->data = serial_bulk.data[serial_next];
+    
+    serial_next++;
+    
+    // new packet has not been sent yet
+    serial_sent = FALSE;
+    
+    return TRUE;
+  }
+  
+  event void SerialSend.sendDone(message_t* bufPtr, error_t error) {
+    serial_sent = TRUE;
+    serialSendPacket();
+  }
+  
+  void serialWakeUp() {
+    if(serial_sending == FALSE) {
+      serialSendPacket();
+    }
+  }
+  
+  event void TimerSerial.fired() {
+    serialSendPacket();
   }
   
   event message_t* RadioTimeSyncReceive.receive(message_t* bufPtr, void* payload, uint8_t len) {
@@ -273,10 +357,6 @@ implementation {
       dbg("TimeSyncTimer", "Fail to send\n");
     }
   }
-  
-
-
-
 
   uint32_t slotScheduler() {
     uint32_t dt = 0;
@@ -369,8 +449,6 @@ implementation {
       return dt;      
   }
 
-
-
   event void TimeSyncSlots.fired() {
     uint32_t dt;
     uint32_t t1;
@@ -380,7 +458,6 @@ implementation {
 
     call TimeSyncSlots.startOneShotAt(t1, dt);
   }
-
 
   event void TimeSyncLaunch.fired() {
     uint32_t dt;
@@ -395,10 +472,6 @@ implementation {
     dbg("GroupProjectC", "TimeSyncLaunch called\n");
   }
 
-
-
-  
-  
   event void Notify.notify(group_project_msg_t datamsg) {
     if(bulk_index == 0) {
       bulk_current.source = datamsg.source;
@@ -437,10 +510,6 @@ implementation {
     
   }
   
-  event void SerialSend.sendDone(message_t* bufPtr, error_t error) {
-    //senddone(bufPtr, error);
-  }
-  
   error_t enqueue(message_t * m) {
     cache_entry_t c;
     // add message to queue
@@ -455,6 +524,12 @@ implementation {
     call Cache.insert(c);
     
     dbg("GroupProjectC", "enqueued (%u,%u) p:%u q:%u\n", c.source, c.seq_no, call Pool.size(), call Queue.size());
+    
+    if(TOS_NODE_ID == SINK_ADDRESS) {
+      // wake up serial if idle
+      serialWakeUp();
+    }
+    
     return SUCCESS;
   }
   

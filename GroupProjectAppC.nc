@@ -22,14 +22,15 @@ implementation {
   components CC2420TimeSyncMessageC as Radio;
   components new AMSenderC(AM_GROUP_PROJECT_MSG);
   components new AMReceiverC(AM_GROUP_PROJECT_MSG);
-  components new TimerMilliC() as TimerSend;
+  components new TimerMilliC() as TimerSendC;
+  components new TimerMilliC() as TimerSerialC;
   components new TimerMilliC() as TimeSyncTimerC;
   components new TimerMilliC() as TimeSyncLaunchC;
   components new TimerMilliC() as TimeSyncSlotsC;
   
   // serial port
-  //components PrintfC, SerialStartC;
-  components SerialPrintfC;
+  components PrintfC, SerialStartC;
+  //components SerialPrintfC;
   components new SerialAMSenderC(AM_GROUP_PROJECT_MSG);
 
   // data generation and forwarding logic
@@ -64,6 +65,7 @@ implementation {
   App.SerialSend -> SerialAMSenderC;
   App.Leds -> LedsC;
   App.TimerSend -> TimerSendC;
+  App.TimerSerial -> TimerSerialC;
   App.LocalTime -> LocalTimeMilliC;
   App.TimeSyncTimer -> TimeSyncTimerC;
   App.TimeSyncLaunch -> TimeSyncLaunchC;

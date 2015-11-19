@@ -10,7 +10,7 @@ Parameters:
 DATARATE=1
 		</description>
 		<scheduleAsap>
-			<durationSecs>60</durationSecs>
+			<durationSecs>300</durationSecs>
 		</scheduleAsap>
 		<emailResults>yes</emailResults>
 	</generalConf>
@@ -52,7 +52,7 @@ DATARATE=1
   <powerProfilingConf>
     <obsIds>001 002 003 004 006 008 015 016 022 028 031 032 033</obsIds>
     <profConf>
-    <durationMillisecs>60000</durationMillisecs>
+    <durationMillisecs>300000</durationMillisecs>
     <relativeTime>
       <offsetSecs>0</offsetSecs>
       <offsetMicrosecs>0</offsetMicrosecs>
