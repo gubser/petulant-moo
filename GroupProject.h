@@ -2,7 +2,7 @@
 #define GROUP_PROJECT_H
 #include <AM.h>
 
-#define BULK_SIZE 12
+#define BULK_SIZE 10
 
 enum {
   MODE_INIT = 0,

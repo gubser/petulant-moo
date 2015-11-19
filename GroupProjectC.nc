@@ -16,10 +16,11 @@
 module GroupProjectC @safe() {
   uses {
     // Basic interfaces
-    interface Leds;
     interface Boot;
 #ifndef COOJA
     interface StdControl as ClockCalibControl;
+#else    
+    interface Leds;
 #endif
     interface Random;
     
@@ -112,10 +113,10 @@ implementation {
         schedule_period = 1200;
         schedule_slotsize = 20;
     } else if(datarate < 20) {      // datarate == 10
-        schedule_period = 120;
+        schedule_period = 150;
         schedule_slotsize = 20;
     } else {                        // datarate == 50
-        schedule_period = 26;
+        schedule_period = 30;
         schedule_slotsize = 20;
     }
     switch(TOS_NODE_ID) {
@@ -262,7 +263,7 @@ implementation {
     gpm = (group_project_msg_t*)call RadioPacket.getPayload(&serial_packet, sizeof(group_project_msg_t));
     
     gpm->source = serial_bulk.source;
-    gpm->seq_no = serial_bulk.seq_no;
+    gpm->seq_no = serial_bulk.seq_no+serial_next;
     gpm->data = serial_bulk.data[serial_next];
     
     serial_next++;
@@ -379,7 +380,9 @@ implementation {
 
         case MODE_LISTEN_ON: {
           dbg("GroupProjectC", "MODE_LISTEN_ON\n");
+#ifdef COOJA
           call Leds.led1On();
+#endif
           call RadioControl.start();
           nextState = MODE_LISTEN_ACK;
           dt = mySchedule.listen_ack - mySchedule.listen;
@@ -389,8 +392,10 @@ implementation {
 
         case MODE_LISTEN_ACK: {
           dbg("GroupProjectC", "MODE_LISTEN_ACK\n");
+#ifdef COOJA
           call Leds.led1Off();
           call Leds.led2On();
+#endif
           nextState = MODE_LISTEN_OFF;
           dt = 1;
           break;
@@ -398,7 +403,9 @@ implementation {
 
         case MODE_LISTEN_OFF: {
           dbg("GroupProjectC", "MODE_LISTEN_OFF\n");
+#ifdef COOJA
           call Leds.led2Off();
+#endif
           call RadioControl.stop();
           nextState = MODE_SEND_ON;
           dt = mySchedule.send - (1 + mySchedule.listen_ack);
@@ -407,8 +414,12 @@ implementation {
 
         case MODE_SEND_ON: {
           dbg("GroupProjectC", "MODE_SEND_ON\n");
+#ifdef COOJA
           call Leds.led2On();
-          call RadioControl.start();
+#endif
+          if(call Queue.empty() == FALSE) {
+            call RadioControl.start();
+          }
           
           call TimerSend.startOneShot(5);
           nextState = MODE_SEND_DONE;
@@ -419,14 +430,18 @@ implementation {
         case MODE_SEND_DONE: {
           dbg("GroupProjectC", "MODE_SEND_DONE\n");
           nextState = MODE_SEND_ACK;
+#ifdef COOJA
           call Leds.led2Off();
+#endif
           dt = mySchedule.send_ack - mySchedule.send_done;
           break;
         }
 
         case MODE_SEND_ACK: {
           dbg("GroupProjectC", "MODE_SEND_ACK\n");
+#ifdef COOJA
           call Leds.led1On();
+#endif
           nextState = MODE_SEND_OFF;
           dt = 1;
           break;
@@ -434,7 +449,9 @@ implementation {
 
         case  MODE_SEND_OFF: {
           dbg("GroupProjectC", "MODE_SEND_OFF\n");
+#ifdef COOJA
           call Leds.led1Off();
+#endif
           call RadioControl.stop();
           nextState = MODE_INIT;
           dt = schedule_period - (1 + mySchedule.send_ack);

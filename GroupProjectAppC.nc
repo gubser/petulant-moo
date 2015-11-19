@@ -15,7 +15,7 @@
 configuration GroupProjectAppC {}
 implementation {
 
-  components MainC, GroupProjectC as App, LedsC;
+  components MainC, GroupProjectC as App;
   components LocalTimeMilliC;
   
   // radio stuff
@@ -44,6 +44,9 @@ implementation {
 #ifndef COOJA
   components Msp430DcoCalibC;
   App.ClockCalibControl -> Msp430DcoCalibC;
+#else
+  components LedsC;
+  App.Leds -> LedsC;
 #endif
     
   App.Notify -> DataGeneratorC;
@@ -63,7 +66,6 @@ implementation {
   App.RadioTimeSyncPacket -> Radio.TimeSyncPacketMilli;
 
   App.SerialSend -> SerialAMSenderC;
-  App.Leds -> LedsC;
   App.TimerSend -> TimerSendC;
   App.TimerSerial -> TimerSerialC;
   App.LocalTime -> LocalTimeMilliC;
