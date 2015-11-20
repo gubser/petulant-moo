@@ -123,9 +123,9 @@ implementation {
       case  6: { mySchedule.device_id =   6; mySchedule.sendto =  28; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   1; mySchedule.send_done =   2; mySchedule.send_ack =   4; } break;
       case 16: { mySchedule.device_id =  16; mySchedule.sendto =  28; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   2; mySchedule.send_done =   3; mySchedule.send_ack =   4; } break;
       case 22: { mySchedule.device_id =  22; mySchedule.sendto =  28; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   3; mySchedule.send_done =   4; mySchedule.send_ack =   4; } break;
-      case 28: { mySchedule.device_id =  28; mySchedule.sendto =  33; mySchedule.listen =   1; mySchedule.listen_ack =   4; mySchedule.send =   5; mySchedule.send_done =   9; mySchedule.send_ack =  10; } break;
-      case  3: { mySchedule.device_id =   3; mySchedule.sendto =  33; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   9; mySchedule.send_done =  10; mySchedule.send_ack =  10; } break;
-      case 33: { mySchedule.device_id =  33; mySchedule.sendto =   1; mySchedule.listen =   5; mySchedule.listen_ack =  10; mySchedule.send =  14; mySchedule.send_done =  20; mySchedule.send_ack =  26; } break;
+      case 28: { mySchedule.device_id =  28; mySchedule.sendto =   3; mySchedule.listen =   1; mySchedule.listen_ack =   4; mySchedule.send =   5; mySchedule.send_done =   9; mySchedule.send_ack =  10; } break;
+      case 33: { mySchedule.device_id =  33; mySchedule.sendto =   3; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =   9; mySchedule.send_done =  10; mySchedule.send_ack =  10; } break;
+      case  3: { mySchedule.device_id =   3; mySchedule.sendto =   1; mySchedule.listen =   5; mySchedule.listen_ack =  10; mySchedule.send =  14; mySchedule.send_done =  20; mySchedule.send_ack =  26; } break;
       case  2: { mySchedule.device_id =   2; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  20; mySchedule.send_done =  21; mySchedule.send_ack =  26; } break;
       case  4: { mySchedule.device_id =   4; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  21; mySchedule.send_done =  22; mySchedule.send_ack =  26; } break;
       case  8: { mySchedule.device_id =   8; mySchedule.sendto =   1; mySchedule.listen =   0; mySchedule.listen_ack =   0; mySchedule.send =  22; mySchedule.send_done =  23; mySchedule.send_ack =  26; } break;
