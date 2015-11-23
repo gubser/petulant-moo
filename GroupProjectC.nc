@@ -433,6 +433,7 @@ implementation {
 #ifdef COOJA
           call Leds.led2Off();
 #endif
+          call RadioControl.stop();
           dt = mySchedule.send_ack - mySchedule.send_done;
           break;
         }
@@ -452,7 +453,6 @@ implementation {
 #ifdef COOJA
           call Leds.led1Off();
 #endif
-          call RadioControl.stop();
           nextState = MODE_INIT;
           dt = schedule_period - (1 + mySchedule.send_ack);
           break;
