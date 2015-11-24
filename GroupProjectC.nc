@@ -26,15 +26,19 @@ module GroupProjectC @safe() {
     
     // Interfaces for radio communication
     interface Receive as RadioReceive;
+    interface Receive as RadioAckReceive;
     interface Receive as RadioTimeSyncReceive;
     interface AMSend as RadioSend;
+    interface AMSend as RadioAckSend;
     interface SplitControl as RadioControl;
     interface Packet as RadioPacket;
+    interface AMPacket as RadioPacketInfo;
     interface TimeSyncPacket<TMilli, uint32_t> as RadioTimeSyncPacket;
     interface TimeSyncAMSend<TMilli, uint32_t> as RadioTimeSyncSend;
     
     // Timer
     interface Timer<TMilli> as TimerSend;
+    interface Timer<TMilli> as TimerSendAck;
     interface Timer<TMilli> as TimerSerial;
     interface Timer<TMilli> as TimeSyncTimer;
     interface Timer<TMilli> as TimeSyncLaunch;
@@ -73,6 +77,10 @@ implementation {
   
   group_bulk_msg_t bulk_current;
   int bulk_index = 0;
+  int bulks_sent_count = 0;
+  
+  message_t bulks_ack_msg;
+  uint16_t bulks_recv_map;
   
   group_bulk_msg_t serial_bulk;
   int serial_next = BULK_SIZE;
@@ -143,7 +151,7 @@ implementation {
 #endif
     get_schedule();
     if(TOS_NODE_ID == SINK_ADDRESS) {
-      serialSendPacket();
+      //serialSendPacket();
     }
   }
   
@@ -168,7 +176,7 @@ implementation {
   void sendPacket() {
     error_t ret;
     
-    if(call Queue.empty()) {
+    if(call Queue.size() <= bulks_sent_count) {
       dbg("GroupProjectC", "sendPacket: no packets to send.\n");
       return;
     }
@@ -180,7 +188,7 @@ implementation {
     
     // sink node prints out data on serial port
     // other nodes forward data over radio
-    ret = call RadioSend.send(mySchedule.sendto, call Queue.head(), sizeof(group_bulk_msg_t));
+    ret = call RadioSend.send(mySchedule.sendto, call Queue.element(bulks_sent_count), sizeof(group_bulk_msg_t));
     if (ret != SUCCESS) {
       dbg("GroupProjectC", "sendPacket: fail to send\n");
       call TimerSend.startOneShot(1);
@@ -192,20 +200,82 @@ implementation {
   }
   
   event void RadioSend.sendDone(message_t* bufPtr, error_t error) {
-    if (call Queue.head() == bufPtr) {
-      // remove from queue
-      call Queue.dequeue();
-      
-      // return buffer
-      call Pool.put(bufPtr);
+    if (call Queue.element(bulks_sent_count) == bufPtr) {
+      // account for sent messages
+      bulks_sent_count++;
       
       // send next waiting message
       sendPacket();
     }
   }
+  
+  int id2idx(int id) {
+    switch(id) {
+      case  2: return 1;
+      case  3: return 2;
+      case  4: return 3;
+      case  6: return 4;
+      case  8: return 5;
+      case 15: return 6;
+      case 16: return 7;
+      case 22: return 8;
+      case 28: return 9;
+      case 31: return 10;
+      case 32: return 11;
+      case 33: return 12;
+      default: return 0;
+    }
+  }
+  
+  event message_t* RadioAckReceive.receive(message_t* bufPtr, void* payload, uint8_t len) {
+    int i;
+    group_bulk_ack_t *gba;
+    if(len == sizeof(group_bulk_ack_t)) {
+      gba = (group_bulk_ack_t*)payload;
+      if(gba->nodes & (1 << id2idx(TOS_NODE_ID)) && call RadioPacketInfo.source(bufPtr) == mySchedule.sendto) {
+        dbg("GroupProjectC", "Received ack from my relay. %u bulks\n", bulks_sent_count);
+        
+        for(i = 0;i < bulks_sent_count;i++) {
+          // remove from queue
+          message_t *buf = call Queue.dequeue();
+          
+          // return buffer
+          call Pool.put(buf);
+        }
+        
+        bulks_sent_count = 0;
+      }
+    }
+    return bufPtr;
+  }
+  
+  event void RadioAckSend.sendDone(message_t* bufPtr, error_t error) {
+  }
+  
+  event void TimerSendAck.fired() {
+    group_bulk_ack_t *gba;
+    error_t ret;
+    
+    if(currentState != MODE_LISTEN_ACK || bulks_recv_map == 0) {
+        return;
+    }
+    
+    gba = (group_bulk_ack_t*)call RadioPacket.getPayload(&bulks_ack_msg, sizeof(group_bulk_ack_t));
+    gba->nodes = bulks_recv_map;
+    ret = call RadioAckSend.send(AM_BROADCAST_ADDR, &bulks_ack_msg, sizeof(group_bulk_ack_t));
+    if (ret != SUCCESS) {
+      dbg("GroupProjectC", "send ack packet: fail to send %d\n", ret);
+    } else {
+      dbg("GroupProjectC", "send ack packet: send ok\n");
+    }
+    
+    call TimerSendAck.startOneShot(10);
+  }
 
   event message_t* RadioReceive.receive(message_t* bufPtr, void* payload, uint8_t len) {
     if(len == sizeof(group_bulk_msg_t)) {
+      bulks_recv_map |= 1 << id2idx(call RadioPacketInfo.source(bufPtr));
+      
       return forward(bufPtr);
     }
     dbg("RadioReceive", "Received unknown packet in RadioReceive\n");
@@ -396,6 +466,7 @@ implementation {
           call Leds.led1Off();
           call Leds.led2On();
 #endif
+          call TimerSendAck.startOneShot(0);
           nextState = MODE_LISTEN_OFF;
           dt = 1;
           break;
@@ -403,12 +474,19 @@ implementation {
 
         case MODE_LISTEN_OFF: {
           dbg("GroupProjectC", "MODE_LISTEN_OFF\n");
+          dt = mySchedule.send - (1 + mySchedule.listen_ack);
+          
 #ifdef COOJA
           call Leds.led2Off();
 #endif
-          call RadioControl.stop();
+          if(dt > 1) {
+            call RadioControl.stop();
+          }
+          call TimerSendAck.stop();
+          
+          bulks_recv_map = 0;
+          
           nextState = MODE_SEND_ON;
-          dt = mySchedule.send - (1 + mySchedule.listen_ack);
           break;
         }
 
@@ -433,16 +511,21 @@ implementation {
 #ifdef COOJA
           call Leds.led2Off();
 #endif
-          call RadioControl.stop();
           dt = mySchedule.send_ack - mySchedule.send_done;
+          if(dt > 1) {
+            call RadioControl.stop();
+          }
           break;
         }
 
         case MODE_SEND_ACK: {
           dbg("GroupProjectC", "MODE_SEND_ACK\n");
 #ifdef COOJA
-          call Leds.led1On();
+          call Leds.led0On();
 #endif
+          if(bulks_sent_count > 0) {
+            call RadioControl.start();
+          }
           nextState = MODE_SEND_OFF;
           dt = 1;
           break;
@@ -451,10 +534,57 @@ implementation {
         case  MODE_SEND_OFF: {
           dbg("GroupProjectC", "MODE_SEND_OFF\n");
 #ifdef COOJA
-          call Leds.led1Off();
+          call Leds.led0Off();
 #endif
+          call RadioControl.stop();
           nextState = MODE_INIT;
           dt = schedule_period - (1 + mySchedule.send_ack);
+          
+          // reset bulks counter
+          bulks_sent_count = 0;
+          break;
+        }
+      }
+      
+
+      dbg("GroupProjectC", "%lu \n", dt);
+      dt = dt * schedule_slotsize;
+
+      return dt;      
+  }
+  
+  uint32_t slotSchedulerSink() {
+    uint32_t dt = 0;
+
+    currentState = nextState;
+    
+    switch (currentState) {
+        case MODE_INIT: {
+          dt = mySchedule.listen_ack;
+          nextState = MODE_LISTEN_ACK;
+          break;
+        }
+
+        case MODE_LISTEN_ACK: {
+          dbg("GroupProjectC", "MODE_LISTEN_ACK\n");
+#ifdef COOJA
+          call Leds.led2On();
+#endif
+          call TimerSendAck.startOneShot(0);
+          nextState = MODE_LISTEN_OFF;
+          dt = 1;
+          break;
+        }
+
+        case MODE_LISTEN_OFF: {
+          dbg("GroupProjectC", "MODE_LISTEN_OFF\n");
+#ifdef COOJA
+          call Leds.led2Off();
+#endif
+          bulks_recv_map = 0;
+          
+          dt = schedule_period - (1+mySchedule.listen_ack);
+          nextState = MODE_INIT;
           break;
         }
       }
@@ -470,8 +600,12 @@ implementation {
     uint32_t dt;
     uint32_t t1;
     t1 = call TimeSyncSlots.gett0() + call TimeSyncSlots.getdt();
-
-    dt = slotScheduler();
+    
+    if(TOS_NODE_ID == SINK_ADDRESS) {
+      dt = slotSchedulerSink();
+    } else {
+      dt = slotScheduler();
+    }
 
     call TimeSyncSlots.startOneShotAt(t1, dt);
   }
@@ -480,12 +614,13 @@ implementation {
     uint32_t dt;
     
     if(TOS_NODE_ID == SINK_ADDRESS) {
-      // sink node always on, no scheduling because no energy optimization
+      nextState = MODE_INIT;
+      dt = slotSchedulerSink();
     } else {
       nextState = MODE_INIT;
       dt = slotScheduler();
-      call TimeSyncSlots.startOneShot(dt);
     }
+    call TimeSyncSlots.startOneShot(dt);
     dbg("GroupProjectC", "TimeSyncLaunch called\n");
   }
 

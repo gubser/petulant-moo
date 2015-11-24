@@ -25,8 +25,6 @@ typedef nx_struct _schedule_t {
   nx_uint8_t send_ack;
 } schedule_t;
 
-
-
 typedef nx_struct group_project_msg {
   nx_am_addr_t source;
   nx_uint8_t seq_no;
@@ -39,6 +37,10 @@ typedef nx_struct group_bulk_msg {
   nx_uint16_t data[BULK_SIZE];
 } group_bulk_msg_t;
 
+typedef nx_struct group_bulk_ack {
+  nx_uint16_t nodes;
+} group_bulk_ack_t;
+
 typedef nx_struct timesync_msg {
   nx_uint16_t tag;
   nx_uint32_t remaining;
@@ -46,7 +48,8 @@ typedef nx_struct timesync_msg {
 
 enum {
   AM_GROUP_PROJECT_MSG = 6,
-  AM_SYNC = 7
+  AM_SYNC = 7,
+  AM_ACK = 8
 };
 
 typedef struct cache_entry {

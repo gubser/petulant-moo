@@ -22,7 +22,10 @@ implementation {
   components CC2420TimeSyncMessageC as Radio;
   components new AMSenderC(AM_GROUP_PROJECT_MSG);
   components new AMReceiverC(AM_GROUP_PROJECT_MSG);
+  components new AMSenderC(AM_ACK) as AMSenderCAck;
+  components new AMReceiverC(AM_ACK) as AMReceiverCAck;
   components new TimerMilliC() as TimerSendC;
+  components new TimerMilliC() as TimerSendAckC;
   components new TimerMilliC() as TimerSerialC;
   components new TimerMilliC() as TimeSyncTimerC;
   components new TimerMilliC() as TimeSyncLaunchC;
@@ -59,14 +62,18 @@ implementation {
   
   App.RadioReceive -> AMReceiverC;
   App.RadioSend -> AMSenderC;
+  App.RadioAckReceive -> AMReceiverCAck;
+  App.RadioAckSend -> AMSenderCAck;
   App.RadioControl -> Radio;
   App.RadioPacket -> AMSenderC;
+  App.RadioPacketInfo -> AMSenderC;
   App.RadioTimeSyncReceive -> Radio.Receive[AM_SYNC];
   App.RadioTimeSyncSend -> Radio.TimeSyncAMSendMilli[AM_SYNC];
   App.RadioTimeSyncPacket -> Radio.TimeSyncPacketMilli;
 
   App.SerialSend -> SerialAMSenderC;
   App.TimerSend -> TimerSendC;
+  App.TimerSendAck -> TimerSendAckC;
   App.TimerSerial -> TimerSerialC;
   App.LocalTime -> LocalTimeMilliC;
   App.TimeSyncTimer -> TimeSyncTimerC;
