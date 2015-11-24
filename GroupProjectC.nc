@@ -151,7 +151,7 @@ implementation {
 #endif
     get_schedule();
     if(TOS_NODE_ID == SINK_ADDRESS) {
-      //serialSendPacket();
+      serialSendPacket();
     }
   }
   
