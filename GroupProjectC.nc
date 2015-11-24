@@ -118,7 +118,7 @@ implementation {
   
   void get_schedule() {
     if(datarate < 5) {              // optimized for datarate == 1
-        schedule_period = 1200;
+        schedule_period = 400;
         schedule_slotsize = 20;
     } else if(datarate < 20) {      // datarate == 10
         schedule_period = 150;
