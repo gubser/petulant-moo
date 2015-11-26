@@ -19,9 +19,8 @@ module GroupProjectC @safe() {
     interface Boot;
 #ifndef COOJA
     interface StdControl as ClockCalibControl;
-#else    
-    interface Leds;
 #endif
+    interface Leds;
     interface Random;
     
     // Interfaces for radio communication
@@ -691,6 +690,9 @@ implementation {
     message_t * m = call Pool.get();
     if (m == NULL) {
       dbg("GroupProjectC", "forward(): no more message buffers.\n");
+      if(TOS_NODE_ID == SINK_ADDRESS) {
+        call Leds.led1On();
+      }
       return fm; // no space available, return pointer to original message
     }
     

@@ -47,10 +47,9 @@ implementation {
 #ifndef COOJA
   components Msp430DcoCalibC;
   App.ClockCalibControl -> Msp430DcoCalibC;
-#else
+#endif
   components LedsC;
   App.Leds -> LedsC;
-#endif
     
   App.Notify -> DataGeneratorC;
   App.Cache -> GroupProjectCacheC;
