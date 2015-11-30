@@ -3,7 +3,7 @@ CFLAGS+=-DDATARATE=50 -DMSG_POOL_SIZE=158 -DSINK_ADDRESS=1 -DCC2420_NO_ACKNOWLED
 CFLAGS += -I$(TOSDIR)/lib/printf -DNEW_PRINTF_SEMANTICS -Ddebug_printf
 BUILD_DEPS+=flocklab_embedded_image
 SENSORBOARD=flocklab
-PFLAGS+=-board=$(SENSORBOARD) -I../../tos/sensorboards/$(SENSORBOARD)
+PFLAGS+=-board=$(SENSORBOARD) -I$(TOSDIR)/sensorboards/$(SENSORBOARD)
 include $(MAKERULES)
 
 flocklab_embedded_image: exe
