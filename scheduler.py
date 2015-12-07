@@ -100,13 +100,13 @@ class M:
 
 base = [1, 2, 3, 4, 6, 8, 15, 16, 22, 28, 31, 32, 33]
 
-mote28 = M(28, [M(6), M(16), M(22)])
+mote6 = M(6, [M(16), M(22)])
+mote3 = M(3, [mote6, M(28)])
+mote8 = M(8, [M(33), mote3])
 mote15 = M(15, [M(31), M(32)])
-mote3 = M(3, [mote28, M(33)])
+sink = M(1, [M(2), mote8, mote15, M(4)])
 
-sink = M(1, [mote3, M(2), M(4), M(8), mote15])
-
-print("mote28", mote28.num_total_children())
+print("mote6", mote6.num_total_children())
 print("mote3", mote3.num_total_children())
 print("sink", sink.num_total_children())
 
